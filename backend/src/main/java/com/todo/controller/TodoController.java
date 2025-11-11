@@ -25,6 +25,27 @@ public class TodoController {
         this.todoService = todoService;
     }
 
+    private Integer extractInteger(Map<String, Object> updates, String key, Integer defaultValue) {
+        if (!updates.containsKey(key)) {
+            return defaultValue;
+        }
+        Object value = updates.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        try {
+            return Integer.valueOf(value.toString());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<Todo>> getAllTodos(
             @RequestParam(required = false) String filter) {
@@ -44,6 +65,19 @@ public class TodoController {
         todo.setText(request.getText());
         todo.setPriority(request.getPriority() != null ? request.getPriority() : "MEDIUM");
         todo.setCompleted(false);
+        todo.setTotalSteps(request.getTotalSteps());
+        todo.setCompletedSteps(0);
+        todo.setEstimatedDuration(request.getEstimatedDuration());
+        // 只有在提供了estimatedDuration时才设置durationUnit
+        if (request.getEstimatedDuration() != null) {
+            todo.setDurationUnit(request.getDurationUnit() != null ? request.getDurationUnit() : "MINUTES");
+        } else {
+            todo.setDurationUnit(null);
+        }
+        todo.setDaily(request.getIsDaily() != null ? request.getIsDaily() : false);
+        if (todo.isDaily()) {
+            todo.setLastResetDate(java.time.LocalDateTime.now());
+        }
         
         Todo createdTodo = todoService.createTodo(todo);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTodo);
@@ -60,6 +94,21 @@ public class TodoController {
         updatedTodo.setText((String) updates.getOrDefault("text", existingTodo.getText()));
         updatedTodo.setCompleted((Boolean) updates.getOrDefault("completed", existingTodo.isCompleted()));
         updatedTodo.setPriority((String) updates.getOrDefault("priority", existingTodo.getPriority()));
+        updatedTodo.setTotalSteps(extractInteger(updates, "totalSteps", existingTodo.getTotalSteps()));
+        updatedTodo.setCompletedSteps(extractInteger(updates, "completedSteps", existingTodo.getCompletedSteps()));
+        updatedTodo.setEstimatedDuration(extractInteger(updates, "estimatedDuration", existingTodo.getEstimatedDuration()));
+        
+        if (updates.containsKey("durationUnit")) {
+            updatedTodo.setDurationUnit((String) updates.get("durationUnit"));
+        } else {
+            updatedTodo.setDurationUnit(existingTodo.getDurationUnit());
+        }
+        
+        if (updates.containsKey("isDaily")) {
+            updatedTodo.setDaily((Boolean) updates.get("isDaily"));
+        } else {
+            updatedTodo.setDaily(existingTodo.isDaily());
+        }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));
     }
@@ -89,6 +138,22 @@ public class TodoController {
                 ? (String) updates.get("priority") 
                 : existingTodo.getPriority()
         );
+        
+        updatedTodo.setTotalSteps(extractInteger(updates, "totalSteps", existingTodo.getTotalSteps()));
+        updatedTodo.setCompletedSteps(extractInteger(updates, "completedSteps", existingTodo.getCompletedSteps()));
+        updatedTodo.setEstimatedDuration(extractInteger(updates, "estimatedDuration", existingTodo.getEstimatedDuration()));
+        
+        if (updates.containsKey("durationUnit")) {
+            updatedTodo.setDurationUnit((String) updates.get("durationUnit"));
+        } else {
+            updatedTodo.setDurationUnit(existingTodo.getDurationUnit());
+        }
+        
+        if (updates.containsKey("isDaily")) {
+            updatedTodo.setDaily((Boolean) updates.get("isDaily"));
+        } else {
+            updatedTodo.setDaily(existingTodo.isDaily());
+        }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));
     }

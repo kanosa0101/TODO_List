@@ -9,6 +9,14 @@ public class TodoRequest {
     private String text;
     
     private String priority; // LOW, MEDIUM, HIGH
+    
+    private Integer totalSteps; // 总步骤数
+    
+    private Integer estimatedDuration; // 预计时长数值
+    
+    private String durationUnit; // 时长单位：MINUTES, HOURS, DAYS
+    
+    private Boolean isDaily; // 是否为每日任务
 
     public TodoRequest() {
     }
@@ -32,6 +40,38 @@ public class TodoRequest {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public Integer getTotalSteps() {
+        return totalSteps;
+    }
+
+    public void setTotalSteps(Integer totalSteps) {
+        this.totalSteps = totalSteps;
+    }
+
+    public Integer getEstimatedDuration() {
+        return estimatedDuration;
+    }
+
+    public void setEstimatedDuration(Integer estimatedDuration) {
+        this.estimatedDuration = estimatedDuration;
+    }
+
+    public String getDurationUnit() {
+        return durationUnit;
+    }
+
+    public void setDurationUnit(String durationUnit) {
+        this.durationUnit = durationUnit;
+    }
+
+    public Boolean getIsDaily() {
+        return isDaily;
+    }
+
+    public void setIsDaily(Boolean isDaily) {
+        this.isDaily = isDaily;
     }
 }
 

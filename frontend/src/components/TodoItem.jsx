@@ -19,6 +19,32 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
     setIsEditing(false);
   };
 
+  const handleProgressChange = (delta) => {
+    if (!todo.totalSteps) return;
+    const newCompletedSteps = Math.max(0, Math.min(todo.totalSteps, (todo.completedSteps || 0) + delta));
+    onUpdate(todo.id, { completedSteps: newCompletedSteps });
+  };
+
+  const getProgressPercentage = () => {
+    if (!todo.totalSteps || todo.totalSteps === 0) return 0;
+    return Math.round(((todo.completedSteps || 0) / todo.totalSteps) * 100);
+  };
+
+  const formatDuration = (duration, unit) => {
+    if (!duration) return null;
+    if (!unit) unit = 'MINUTES'; // 兼容旧数据
+    
+    switch (unit) {
+      case 'DAYS':
+        return `${duration}天`;
+      case 'HOURS':
+        return `${duration}小时`;
+      case 'MINUTES':
+      default:
+        return `${duration}分钟`;
+    }
+  };
+
   return (
     <div className={`todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority?.toLowerCase()}`}>
       <div className="todo-content">
@@ -60,7 +86,45 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
                 {todo.createdAt && (
                   <span className="todo-date">{formatDate(todo.createdAt)}</span>
                 )}
+                {todo.estimatedDuration && (
+                  <span className="todo-duration">⏱️ {formatDuration(todo.estimatedDuration, todo.durationUnit || 'MINUTES')}</span>
+                )}
+                {todo.isDaily === true && (
+                  <span className="daily-badge">🔄 每日</span>
+                )}
               </div>
+              {todo.totalSteps && todo.totalSteps > 0 && (
+                <div className="progress-section">
+                  <div className="progress-header">
+                    <span className="progress-label">
+                      进度: {todo.completedSteps || 0} / {todo.totalSteps}
+                    </span>
+                    <span className="progress-percentage">{getProgressPercentage()}%</span>
+                  </div>
+                  <div className="progress-bar-container">
+                    <div 
+                      className="progress-bar" 
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    ></div>
+                  </div>
+                  <div className="progress-controls">
+                    <button 
+                      onClick={() => handleProgressChange(-1)} 
+                      className="progress-btn"
+                      disabled={(todo.completedSteps || 0) <= 0}
+                    >
+                      ➖
+                    </button>
+                    <button 
+                      onClick={() => handleProgressChange(1)} 
+                      className="progress-btn"
+                      disabled={(todo.completedSteps || 0) >= todo.totalSteps}
+                    >
+                      ➕
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -1,5 +1,6 @@
 package com.todo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -19,17 +20,43 @@ public class Todo {
     @Column(nullable = false, length = 20)
     private String priority; // LOW, MEDIUM, HIGH
     
+    @Column(nullable = true)
+    private Integer totalSteps; // 总步骤数，用户设置
+    
+    @Column(nullable = true)
+    private Integer completedSteps; // 已完成步骤数，默认为0
+    
+    @Column(nullable = true)
+    private Integer estimatedDuration; // 预计时长数值，用户设置
+    
+    @Column(nullable = true, length = 20)
+    private String durationUnit; // 时长单位：MINUTES, HOURS, DAYS
+    
+    @Column(nullable = false)
+    @JsonProperty("isDaily")
+    private boolean isDaily; // 是否为每日任务
+    
+    @Column(nullable = true)
+    private LocalDateTime lastResetDate; // 上次重置日期（用于每日任务）
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Todo() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.priority = "MEDIUM";
         this.completed = false;
+        this.completedSteps = 0;
+        this.isDaily = false;
+        this.durationUnit = null; // 默认为null，只有在设置了estimatedDuration时才设置
     }
 
     public Todo(Long id, String text, boolean completed, String priority) {
@@ -102,6 +129,68 @@ public class Todo {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Integer getTotalSteps() {
+        return totalSteps;
+    }
+
+    public void setTotalSteps(Integer totalSteps) {
+        this.totalSteps = totalSteps;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Integer getCompletedSteps() {
+        return completedSteps;
+    }
+
+    public void setCompletedSteps(Integer completedSteps) {
+        this.completedSteps = completedSteps;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Integer getEstimatedDuration() {
+        return estimatedDuration;
+    }
+
+    public void setEstimatedDuration(Integer estimatedDuration) {
+        this.estimatedDuration = estimatedDuration;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getDurationUnit() {
+        return durationUnit;
+    }
+
+    public void setDurationUnit(String durationUnit) {
+        this.durationUnit = durationUnit;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isDaily() {
+        return isDaily;
+    }
+
+    public void setDaily(boolean daily) {
+        isDaily = daily;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getLastResetDate() {
+        return lastResetDate;
+    }
+
+    public void setLastResetDate(LocalDateTime lastResetDate) {
+        this.lastResetDate = lastResetDate;
+        this.updatedAt = LocalDateTime.now();
     }
 }
 

@@ -2,10 +2,12 @@ import React from 'react';
 import '../styles/components.css';
 
 function TodoStats({ todos }) {
+  // 排除每日任务，处理可能为null/undefined的isDaily字段
+  const otherTodos = todos.filter(t => !t.isDaily || t.isDaily === false);
   const stats = {
-    total: todos.length,
-    completed: todos.filter(t => t.completed).length,
-    active: todos.filter(t => !t.completed).length,
+    total: otherTodos.length,
+    completed: otherTodos.filter(t => t.completed).length,
+    active: otherTodos.filter(t => !t.completed).length,
   };
 
   return (

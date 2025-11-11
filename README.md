@@ -2,6 +2,8 @@
 
 一个现代化、功能丰富的前后端分离全栈项目，使用 React + Vite 作为前端，Java Spring Boot 作为后端。
 
+> 📖 **快速开始**：查看 [QUICK_START.md](./QUICK_START.md) 获取快速启动指南
+
 ## 📁 项目结构
 
 ```
@@ -101,10 +103,14 @@ App (主容器)
 ### 增强功能
 - 🎯 **优先级管理**：高/中/低三个优先级，不同颜色标识
 - 🔍 **筛选功能**：全部/进行中/已完成三种筛选
-- 📊 **统计信息**：显示总计、进行中、已完成数量
+- 📊 **统计信息**：显示总计、进行中、已完成数量（排除每日任务）
 - 📅 **时间显示**：显示待办事项创建时间
 - ✏️ **内联编辑**：点击编辑按钮即可编辑
 - 🎨 **现代化UI**：渐变背景、动画效果、响应式设计
+- 🔄 **每日任务**：支持设置每日任务，每天自动重置完成状态
+- ⏱️ **任务时长**：支持设置预计时长（分钟/小时/天）
+- 📈 **进度跟踪**：支持设置任务步骤数并跟踪完成进度
+- 📦 **分类显示**：每日任务和其他任务分类显示，已完成任务更透明
 
 ## 🚀 快速开始
 
@@ -277,23 +283,58 @@ npm run dev
 
 ## 📡 API 接口
 
-后端提供以下 RESTful API：
+### 认证 API（无需 Token）
 
-### 获取待办事项
-- `GET /api/todos` - 获取所有待办事项
+#### 用户注册
+- `POST /api/auth/register` - 注册新用户
+  ```json
+  {
+    "username": "用户名（3-50字符）",
+    "password": "密码（至少6字符）",
+    "email": "邮箱地址"
+  }
+  ```
+
+#### 用户登录
+- `POST /api/auth/login` - 用户登录
+  ```json
+  {
+    "username": "用户名",
+    "password": "密码"
+  }
+  ```
+  响应：
+  ```json
+  {
+    "token": "JWT Token",
+    "username": "用户名",
+    "userId": 1
+  }
+  ```
+
+### 待办事项 API（需要 Token）
+
+所有待办事项 API 都需要在请求头中添加 `Authorization: Bearer <token>`
+
+#### 获取待办事项
+- `GET /api/todos` - 获取当前用户的所有待办事项
 - `GET /api/todos?filter=ALL|ACTIVE|COMPLETED` - 按筛选条件获取
 - `GET /api/todos/{id}` - 获取单个待办事项
 
-### 创建待办事项
+#### 创建待办事项
 - `POST /api/todos` - 创建新的待办事项
   ```json
   {
     "text": "待办事项内容",
-    "priority": "HIGH|MEDIUM|LOW"
+    "priority": "HIGH|MEDIUM|LOW",
+    "totalSteps": 10,
+    "estimatedDuration": 60,
+    "durationUnit": "MINUTES|HOURS|DAYS",
+    "isDaily": false
   }
   ```
 
-### 更新待办事项
+#### 更新待办事项
 - `PUT /api/todos/{id}` - 完整更新待办事项
 - `PATCH /api/todos/{id}` - 部分更新待办事项
   ```json
@@ -304,7 +345,7 @@ npm run dev
   }
   ```
 
-### 删除待办事项
+#### 删除待办事项
 - `DELETE /api/todos/{id}` - 删除待办事项
 
 ## 🛠️ 技术栈
@@ -326,14 +367,33 @@ npm run dev
 
 ## 📊 数据模型
 
+### User（用户）
+```java
+User {
+  id: Long                    // 唯一标识
+  username: String            // 用户名（唯一）
+  password: String            // 密码（BCrypt加密）
+  email: String               // 邮箱（唯一）
+  createdAt: LocalDateTime     // 创建时间
+}
+```
+
+### Todo（待办事项）
 ```java
 Todo {
   id: Long                    // 唯一标识
   text: String                // 待办内容
   completed: Boolean          // 完成状态
   priority: String            // 优先级 (LOW, MEDIUM, HIGH)
+  totalSteps: Integer         // 总步骤数（可选）
+  completedSteps: Integer     // 已完成步骤数
+  estimatedDuration: Integer  // 预计时长数值（可选）
+  durationUnit: String        // 时长单位 (MINUTES, HOURS, DAYS)
+  isDaily: Boolean            // 是否为每日任务
+  lastResetDate: LocalDateTime // 每日任务上次重置日期
   createdAt: LocalDateTime    // 创建时间
   updatedAt: LocalDateTime    // 更新时间
+  user: User                  // 所属用户（外键）
 }
 ```
 
@@ -368,6 +428,66 @@ Todo {
 - **后端**: 按层次划分（controller/service/repository/model/dto）
 - **前端**: 按功能划分（components/services/utils/styles）
 
+## 🔐 用户认证与授权
+
+### 认证功能
+
+- ✅ **用户注册** - 支持用户名、密码、邮箱注册
+- ✅ **用户登录** - JWT Token 认证
+- ✅ **密码加密** - BCrypt 加密存储
+- ✅ **Token 管理** - 自动过期处理（24小时）
+- ✅ **路由保护** - 未登录自动跳转登录页
+- ✅ **用户隔离** - 每个用户只能访问自己的待办事项
+
+### 认证 API
+
+#### 用户注册
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123",
+  "email": "test@example.com"
+}
+```
+
+#### 用户登录
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "password123"
+}
+```
+
+响应示例：
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "username": "testuser",
+  "userId": 1
+}
+```
+
+### 使用 Token
+
+所有需要认证的 API 请求都需要在请求头中添加 Token：
+
+```http
+Authorization: Bearer <your-token>
+```
+
+### 前端认证流程
+
+1. **登录/注册** → 获取 Token 并存储到 localStorage
+2. **API 请求** → 自动在请求头添加 Token
+3. **Token 过期** → 自动清除并跳转到登录页
+4. **路由保护** → 未登录用户自动重定向到登录页
+
 ## 🔄 改进计划
 
 - [x] 添加数据持久化（JSON文件存储）
@@ -376,7 +496,7 @@ Todo {
 - [x] API 服务层封装
 - [x] 添加 SQL 数据库持久化（MySQL + JPA）
 - [x] 切换到生产级数据库（MySQL）
-- [ ] 添加用户认证和授权
+- [x] 添加用户认证和授权
 - [ ] 添加待办事项分类/标签
 - [ ] 添加搜索功能
 - [ ] 添加排序功能（按优先级、时间等）
@@ -394,8 +514,28 @@ Todo {
 - ✅ 确认 MySQL 端口 3306 未被占用
 
 **问题：端口被占用**
+
+使用端口检查工具：
+- **Windows**: 运行 `check-ports.bat` 检查所有端口占用情况
+- **Linux/Mac**: 运行 `chmod +x check-ports.sh && ./check-ports.sh`
+
+手动检查：
+```bash
+# Windows
+netstat -ano | findstr ":3000"
+netstat -ano | findstr ":3001"
+netstat -ano | findstr ":3306"
+
+# Linux/Mac
+lsof -i :3000
+lsof -i :3001
+lsof -i :3306
+```
+
+解决方案：
 - ✅ 后端端口 3001 被占用：修改 `application.properties` 中的 `server.port`
-- ✅ MySQL 端口 3306 被占用：检查是否有其他 MySQL 实例运行
+- ✅ 前端端口 3000 被占用：修改 `vite.config.js` 中的 `server.port`，或使用 `kill-port.bat 3000` (Windows) / `./kill-port.sh 3000` (Linux/Mac) 终止占用进程
+- ✅ MySQL 端口 3306 被占用：检查是否有其他 MySQL 实例运行（正常情况）
 
 **问题：依赖下载失败**
 - ✅ 检查网络连接
@@ -419,6 +559,18 @@ Todo {
 - ✅ 检查浏览器控制台的错误信息
 - ✅ 确认 CORS 配置正确
 
+**问题：401 Unauthorized 错误**
+- ✅ 检查 Token 是否已过期（默认24小时）
+- ✅ 确认请求头中包含了 `Authorization: Bearer <token>`
+- ✅ 重新登录获取新的 Token
+- ✅ 检查 localStorage 中是否存储了 token
+
+**问题：登录失败**
+- ✅ 确认用户名和密码正确
+- ✅ 检查后端日志中的错误信息
+- ✅ 确认数据库连接正常
+- ✅ 检查用户是否已注册
+
 ### 数据库问题
 
 **问题：表结构未自动创建**
@@ -434,6 +586,7 @@ Todo {
 ## 📚 相关文档
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - 详细的架构设计文档
+- [AUTHENTICATION.md](./AUTHENTICATION.md) - 用户认证系统详细文档
 - [后端 README](./backend/README.md) - 后端项目说明
 
 ## 🤝 贡献

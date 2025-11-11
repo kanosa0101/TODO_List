@@ -1,150 +1,54 @@
-import { useState, useEffect } from 'react';
-import todoService from './services/todoService';
-import { FILTER } from './utils/constants';
-import TodoStats from './components/TodoStats';
-import TodoForm from './components/TodoForm';
-import TodoFilter from './components/TodoFilter';
-import TodoList from './components/TodoList';
-import './styles/App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import TodoApp from './components/TodoApp';
+import LoginForm from './components/LoginForm';
+import RegisterForm from './components/RegisterForm';
+import ProtectedRoute from './components/ProtectedRoute';
+import authService from './services/authService';
 
 function App() {
-  const [allTodos, setAllTodos] = useState([]); // 存储所有待办事项（用于统计）
-  const [todos, setTodos] = useState([]); // 当前显示的待办事项（筛选后）
-  const [filter, setFilter] = useState(FILTER.ALL);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // 首次加载时获取全部数据
+  // 页面加载时检查是否需要清除认证信息
   useEffect(() => {
-    fetchAllTodos();
+    // 检查是否是首次访问（没有sessionStorage标记）
+    const sessionKey = 'todo_app_session';
+    const sessionId = sessionStorage.getItem(sessionKey);
+    
+    if (!sessionId) {
+      // 首次访问或浏览器重启，清除认证信息
+      authService.logout();
+      // 生成新的会话ID
+      sessionStorage.setItem(sessionKey, Date.now().toString());
+    }
+    
+    // 监听页面卸载事件，清除会话标记（这样下次打开就是新会话）
+    const handleBeforeUnload = () => {
+      // 不在这里清除，让浏览器自然关闭时清除sessionStorage
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
-  // 筛选改变时更新显示的数据
-  useEffect(() => {
-    applyFilter();
-  }, [filter, allTodos]);
-
-  const fetchAllTodos = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await todoService.getAllTodos(null); // 获取全部数据
-      setAllTodos(data);
-    } catch (err) {
-      setError('加载待办事项失败');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilter = () => {
-    if (filter === FILTER.ALL) {
-      setTodos(allTodos);
-    } else if (filter === FILTER.ACTIVE) {
-      setTodos(allTodos.filter(t => !t.completed));
-    } else if (filter === FILTER.COMPLETED) {
-      setTodos(allTodos.filter(t => t.completed));
-    }
-  };
-
-  const handleAdd = async (todoData) => {
-    try {
-      setError(null);
-      const newTodo = await todoService.createTodo(todoData);
-      setAllTodos([...allTodos, newTodo]); // 更新全部数据
-      // applyFilter 会自动更新显示的数据
-    } catch (err) {
-      setError('添加待办事项失败');
-      console.error(err);
-    }
-  };
-
-  const handleToggle = async (id, completed) => {
-    try {
-      setError(null);
-      const updatedTodo = await todoService.partialUpdateTodo(id, { completed: !completed });
-      setAllTodos(allTodos.map(t => t.id === id ? updatedTodo : t)); // 更新全部数据
-      // applyFilter 会自动更新显示的数据
-    } catch (err) {
-      setError('更新待办事项失败');
-      console.error(err);
-    }
-  };
-
-  const handleUpdate = async (id, updates) => {
-    try {
-      setError(null);
-      const existingTodo = allTodos.find(t => t.id === id);
-      const updatedTodo = await todoService.updateTodo(id, {
-        ...existingTodo,
-        ...updates,
-      });
-      setAllTodos(allTodos.map(t => t.id === id ? updatedTodo : t)); // 更新全部数据
-      // applyFilter 会自动更新显示的数据
-    } catch (err) {
-      setError('更新待办事项失败');
-      console.error(err);
-    }
-  };
-
-  const handlePriorityChange = async (id, priority) => {
-    try {
-      setError(null);
-      const updatedTodo = await todoService.partialUpdateTodo(id, { priority });
-      setAllTodos(allTodos.map(t => t.id === id ? updatedTodo : t)); // 更新全部数据
-      // applyFilter 会自动更新显示的数据
-    } catch (err) {
-      setError('更新优先级失败');
-      console.error(err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('确定要删除这个待办事项吗？')) return;
-    try {
-      setError(null);
-      await todoService.deleteTodo(id);
-      setAllTodos(allTodos.filter(t => t.id !== id)); // 更新全部数据
-      // applyFilter 会自动更新显示的数据
-    } catch (err) {
-      setError('删除待办事项失败');
-      console.error(err);
-    }
-  };
-
   return (
-    <div className="app">
-      <div className="container">
-        <div className="header">
-          <h1>
-            <span className="icon">✨</span>
-            我的待办清单
-          </h1>
-          <TodoStats todos={allTodos} />
-        </div>
-
-        <TodoForm onSubmit={handleAdd} />
-        <TodoFilter filter={filter} onFilterChange={setFilter} todos={allTodos} />
-
-        {error && <div className="error-message">{error}</div>}
-
-        {loading ? (
-          <div className="loading">
-            <div className="spinner"></div>
-            <span>加载中...</span>
-          </div>
-        ) : (
-          <TodoList
-            todos={todos}
-            onToggle={handleToggle}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onPriorityChange={handlePriorityChange}
-          />
-        )}
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={
+          authService.isAuthenticated() ? <Navigate to="/" replace /> : <LoginForm />
+        } />
+        <Route path="/register" element={
+          authService.isAuthenticated() ? <Navigate to="/" replace /> : <RegisterForm />
+        } />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <TodoApp />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

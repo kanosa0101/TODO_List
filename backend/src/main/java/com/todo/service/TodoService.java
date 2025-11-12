@@ -128,8 +128,14 @@ public class TodoService {
             existingTodo.setDurationUnit(updatedTodo.getDurationUnit());
         }
         existingTodo.setDaily(updatedTodo.isDaily());
-        if (updatedTodo.isDaily() && existingTodo.getLastResetDate() == null) {
-            existingTodo.setLastResetDate(LocalDateTime.now());
+        if (updatedTodo.isDaily()) {
+            if (existingTodo.getLastResetDate() == null) {
+                existingTodo.setLastResetDate(LocalDateTime.now());
+            }
+            existingTodo.setDueDate(null);
+        } else {
+            existingTodo.setLastResetDate(null);
+            existingTodo.setDueDate(updatedTodo.getDueDate());
         }
         existingTodo.setUpdatedAt(LocalDateTime.now());
         

@@ -6,6 +6,68 @@
   flex-wrap: wrap;
 }
 
+/* 当前时间样式 */
+.current-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4),
+              0 4px 12px rgba(118, 75, 162, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.current-time::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.current-time:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5),
+              0 6px 16px rgba(118, 75, 162, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.time-text {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
 .stat-item {
   display: flex;
   flex-direction: column;
@@ -467,6 +529,25 @@
   font-weight: 500;
 }
 
+.todo-due-date {
+  font-size: 12px;
+  color: #0984e3;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-due-date.due-overdue {
+  color: #d63031;
+  font-weight: 600;
+}
+
+.todo-due-date.due-soon {
+  color: #e17055;
+  font-weight: 600;
+}
+
 .daily-badge {
   padding: 4px 12px;
   border-radius: 12px;
@@ -495,6 +576,13 @@
   color: #636e72;
   margin-bottom: 4px;
   font-weight: 500;
+}
+
+.field-helper-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #b2bec3;
 }
 
 .form-number-input {

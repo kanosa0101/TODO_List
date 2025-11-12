@@ -7,6 +7,7 @@ import TodoForm from './TodoForm';
 import TodoFilter from './TodoFilter';
 import TodoList from './TodoList';
 import UserMenu from './UserMenu';
+import CurrentTime from './CurrentTime';
 import '../styles/App.css';
 
 function TodoApp() {
@@ -39,7 +40,8 @@ function TodoApp() {
         durationUnit: todo.durationUnit || 'MINUTES',
         completedSteps: todo.completedSteps || 0,
         totalSteps: todo.totalSteps || null,
-        estimatedDuration: todo.estimatedDuration || null
+        estimatedDuration: todo.estimatedDuration || null,
+        dueDate: todo.dueDate || null
       })) : [];
       setAllTodos(normalizedData);
     } catch (err) {
@@ -160,15 +162,14 @@ function TodoApp() {
   return (
     <div className="app">
       <div className="container">
+        <UserMenu />
         <div className="header">
           <h1>
             <span className="icon">✨</span>
             <span>我的待办清单</span>
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <TodoStats todos={allTodos} />
-            <UserMenu />
-          </div>
+          <TodoStats todos={allTodos} />
+          <CurrentTime />
         </div>
 
         <div style={{ marginBottom: '24px', textAlign: 'center' }}>

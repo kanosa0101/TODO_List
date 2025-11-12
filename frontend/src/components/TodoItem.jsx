@@ -7,6 +7,27 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
 
+  const dueDateText = formatDate(todo.dueDate);
+
+  const isOverdue = () => {
+    if (!todo.dueDate || todo.completed) return false;
+    const now = new Date();
+    const due = new Date(todo.dueDate);
+    return due.getTime() < now.getTime();
+  };
+
+  const isDueSoon = (overdueFlag) => {
+    if (!todo.dueDate || todo.completed || overdueFlag) return false;
+    const now = new Date();
+    const due = new Date(todo.dueDate);
+    const diff = due.getTime() - now.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    return diff >= 0 && diff <= oneDayMs;
+  };
+
+  const overdue = isOverdue();
+  const dueSoon = isDueSoon(overdue);
+
   const handleSave = () => {
     if (editText.trim()) {
       onUpdate(todo.id, { text: editText });
@@ -83,8 +104,16 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
                 >
                   {PRIORITY_LABELS[todo.priority]}
                 </span>
-                {todo.createdAt && (
-                  <span className="todo-date">{formatDate(todo.createdAt)}</span>
+                {dueDateText && (
+                  <span
+                    className={[
+                      'todo-due-date',
+                      !todo.completed && overdue ? 'due-overdue' : null,
+                      !todo.completed && dueSoon ? 'due-soon' : null
+                    ].filter(Boolean).join(' ')}
+                  >
+                    📅 截止 {dueDateText}
+                  </span>
                 )}
                 {todo.estimatedDuration && (
                   <span className="todo-duration">⏱️ {formatDuration(todo.estimatedDuration, todo.durationUnit || 'MINUTES')}</span>

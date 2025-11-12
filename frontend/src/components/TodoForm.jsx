@@ -8,6 +8,7 @@ function TodoForm({ onSubmit, isOpen, onClose }) {
   const [estimatedDuration, setEstimatedDuration] = useState('');
   const [durationUnit, setDurationUnit] = useState('MINUTES');
   const [isDaily, setIsDaily] = useState(false);
+  const [dueDate, setDueDate] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,6 +29,8 @@ function TodoForm({ onSubmit, isOpen, onClose }) {
       
       if (isDaily) {
         todoData.isDaily = true;
+      } else if (dueDate) {
+        todoData.dueDate = dueDate;
       }
       
       onSubmit(todoData);
@@ -37,6 +40,7 @@ function TodoForm({ onSubmit, isOpen, onClose }) {
       setEstimatedDuration('');
       setDurationUnit('MINUTES');
       setIsDaily(false);
+      setDueDate('');
       onClose();
     }
   };
@@ -48,6 +52,7 @@ function TodoForm({ onSubmit, isOpen, onClose }) {
     setEstimatedDuration('');
     setDurationUnit('MINUTES');
     setIsDaily(false);
+    setDueDate('');
     onClose();
   };
 
@@ -158,11 +163,31 @@ function TodoForm({ onSubmit, isOpen, onClose }) {
             <input
               type="checkbox"
               checked={isDaily}
-              onChange={(e) => setIsDaily(e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsDaily(checked);
+                if (checked) {
+                  setDueDate('');
+                }
+              }}
               style={{ width: '18px', height: '18px', cursor: 'pointer' }}
             />
             <span>每日任务（每天自动刷新）</span>
           </label>
+        </div>
+        <div className="form-field-group">
+          <label htmlFor="dueDate">截止时间（非每日任务可选）</label>
+          <input
+            type="datetime-local"
+            id="dueDate"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            disabled={isDaily}
+            className="form-number-input"
+          />
+          {isDaily && (
+            <span className="field-helper-text">每日任务不支持截止时间</span>
+          )}
         </div>
       </div>
           <div className="modal-actions">

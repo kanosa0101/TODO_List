@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +48,31 @@ public class TodoController {
         }
     }
 
+    private LocalDateTime extractLocalDateTime(Map<String, Object> updates, String key, LocalDateTime defaultValue) {
+        if (!updates.containsKey(key)) {
+            return defaultValue;
+        }
+        Object value = updates.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalDateTime) {
+            return (LocalDateTime) value;
+        }
+        if (value instanceof String) {
+            String str = ((String) value).trim();
+            if (str.isEmpty()) {
+                return null;
+            }
+            try {
+                return LocalDateTime.parse(str);
+            } catch (DateTimeParseException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
     @GetMapping
     public ResponseEntity<List<Todo>> getAllTodos(
             @RequestParam(required = false) String filter) {
@@ -77,6 +104,9 @@ public class TodoController {
         todo.setDaily(request.getIsDaily() != null ? request.getIsDaily() : false);
         if (todo.isDaily()) {
             todo.setLastResetDate(java.time.LocalDateTime.now());
+            todo.setDueDate(null);
+        } else if (request.getDueDate() != null) {
+            todo.setDueDate(request.getDueDate());
         }
         
         Todo createdTodo = todoService.createTodo(todo);
@@ -104,10 +134,14 @@ public class TodoController {
             updatedTodo.setDurationUnit(existingTodo.getDurationUnit());
         }
         
-        if (updates.containsKey("isDaily")) {
-            updatedTodo.setDaily((Boolean) updates.get("isDaily"));
+        boolean updatedIsDaily = updates.containsKey("isDaily")
+                ? Boolean.TRUE.equals(updates.get("isDaily"))
+                : existingTodo.isDaily();
+        updatedTodo.setDaily(updatedIsDaily);
+        if (updatedIsDaily) {
+            updatedTodo.setDueDate(null);
         } else {
-            updatedTodo.setDaily(existingTodo.isDaily());
+            updatedTodo.setDueDate(extractLocalDateTime(updates, "dueDate", existingTodo.getDueDate()));
         }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));
@@ -149,10 +183,16 @@ public class TodoController {
             updatedTodo.setDurationUnit(existingTodo.getDurationUnit());
         }
         
-        if (updates.containsKey("isDaily")) {
-            updatedTodo.setDaily((Boolean) updates.get("isDaily"));
+        boolean updatedIsDaily = updates.containsKey("isDaily")
+                ? Boolean.TRUE.equals(updates.get("isDaily"))
+                : existingTodo.isDaily();
+        updatedTodo.setDaily(updatedIsDaily);
+        if (updatedIsDaily) {
+            updatedTodo.setDueDate(null);
+        } else if (updates.containsKey("dueDate")) {
+            updatedTodo.setDueDate(extractLocalDateTime(updates, "dueDate", existingTodo.getDueDate()));
         } else {
-            updatedTodo.setDaily(existingTodo.isDaily());
+            updatedTodo.setDueDate(existingTodo.getDueDate());
         }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));

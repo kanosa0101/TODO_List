@@ -3,6 +3,8 @@ package com.todo.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 public class TodoRequest {
     @NotBlank(message = "待办事项内容不能为空")
     @Size(max = 500, message = "待办事项内容不能超过500个字符")
@@ -17,6 +19,8 @@ public class TodoRequest {
     private String durationUnit; // 时长单位：MINUTES, HOURS, DAYS
     
     private Boolean isDaily; // 是否为每日任务
+
+    private LocalDateTime dueDate; // 非每日任务截止时间（可选）
 
     public TodoRequest() {
     }
@@ -72,6 +76,14 @@ public class TodoRequest {
 
     public void setIsDaily(Boolean isDaily) {
         this.isDaily = isDaily;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
     }
 }
 

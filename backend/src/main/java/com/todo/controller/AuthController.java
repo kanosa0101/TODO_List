@@ -52,6 +52,7 @@ public class AuthController {
             this.message = message;
         }
 
+        @SuppressWarnings("unused") // 用于JSON序列化
         public String getMessage() {
             return message;
         }

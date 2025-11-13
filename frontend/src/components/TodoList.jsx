@@ -3,14 +3,51 @@ import TodoItem from './TodoItem';
 import '../styles/components.css';
 
 function TodoList({ todos, onToggle, onUpdate, onDelete, onPriorityChange }) {
+  // 排序函数：非每日任务按截止时间升序，每日任务置底
+  const sortTodos = (todoList) => {
+    return [...todoList].sort((a, b) => {
+      const aIsDaily = a.isDaily === true;
+      const bIsDaily = b.isDaily === true;
+      
+      // 每日任务置底
+      if (aIsDaily && !bIsDaily) return 1;
+      if (!aIsDaily && bIsDaily) return -1;
+      
+      // 如果都是每日任务或都不是每日任务
+      if (aIsDaily && bIsDaily) {
+        // 每日任务按创建时间排序
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aCreated - bCreated;
+      }
+      
+      // 非每日任务按截止时间升序
+      const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      
+      if (aDue !== bDue) {
+        return aDue - bDue;
+      }
+      
+      // 截止时间相同则按创建时间先后
+      const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aCreated - bCreated;
+    });
+  };
+
   // 分类任务，处理可能为null/undefined的isDaily字段
   const dailyTodos = todos.filter(t => t.isDaily === true);
   const otherTodos = todos.filter(t => !t.isDaily || t.isDaily === false);
   
-  const dailyActive = dailyTodos.filter(t => !t.completed);
-  const dailyCompleted = dailyTodos.filter(t => t.completed);
-  const otherActive = otherTodos.filter(t => !t.completed);
-  const otherCompleted = otherTodos.filter(t => t.completed);
+  // 对非每日任务进行排序
+  const sortedOtherTodos = sortTodos(otherTodos);
+  const sortedDailyTodos = sortTodos(dailyTodos);
+  
+  const dailyActive = sortedDailyTodos.filter(t => !t.completed);
+  const dailyCompleted = sortedDailyTodos.filter(t => t.completed);
+  const otherActive = sortedOtherTodos.filter(t => !t.completed);
+  const otherCompleted = sortedOtherTodos.filter(t => t.completed);
 
   const renderTodoSection = (title, todoList, sectionClass) => {
     if (todoList.length === 0) return null;

@@ -60,36 +60,53 @@ com.todo/
 ├── TodoApplication.java          # Spring Boot 应用入口
 │
 ├── controller/                   # 控制器层
-│   └── TodoController.java       # REST API 端点
+│   ├── TodoController.java       # 待办事项 REST API
+│   ├── NoteController.java       # 笔记 REST API
+│   └── AuthController.java       # 认证 REST API
 │       - @RestController
-│       - @RequestMapping("/api/todos")
 │       - 处理 GET/POST/PUT/PATCH/DELETE 请求
 │
 ├── service/                      # 服务层
-│   └── TodoService.java          # 业务逻辑服务
+│   ├── TodoService.java          # 待办事项业务逻辑
+│   ├── NoteService.java          # 笔记业务逻辑
+│   └── AuthService.java          # 认证业务逻辑
 │       - @Service
-│       - 依赖注入 TodoRepository
+│       - 依赖注入 Repository
 │       - 处理业务规则和数据转换
 │
 ├── repository/                   # 数据访问层
-│   └── TodoRepository.java       # JPA Repository 接口
-│       - extends JpaRepository<Todo, Long>
+│   ├── TodoRepository.java       # 待办事项 Repository
+│   ├── NoteRepository.java       # 笔记 Repository
+│   └── UserRepository.java       # 用户 Repository
+│       - extends JpaRepository<T, Long>
 │       - 自定义查询方法
-│       - findByCompletedTrue/False
 │
 ├── model/                        # 数据模型
-│   └── Todo.java                 # JPA 实体类
+│   ├── Todo.java                 # 待办事项实体
+│   ├── Note.java                 # 笔记实体
+│   └── User.java                 # 用户实体
 │       - @Entity
-│       - @Table(name = "todos")
 │       - 数据库表映射
 │
 ├── dto/                          # 数据传输对象
-│   └── TodoRequest.java          # 请求 DTO
+│   ├── TodoRequest.java          # 待办事项请求 DTO
+│   ├── NoteRequest.java          # 笔记请求 DTO
+│   ├── LoginRequest.java         # 登录请求 DTO
+│   └── RegisterRequest.java      # 注册请求 DTO
 │       - 参数验证注解
 │       - 数据封装
 │
+├── security/                     # 安全相关
+│   ├── JwtAuthenticationFilter.java  # JWT 认证过滤器
+│   └── UserDetailsServiceImpl.java   # 用户详情服务
+│
+├── util/                         # 工具类
+│   ├── JwtUtil.java              # JWT 工具类
+│   └── SecurityUtil.java         # 安全工具类
+│
 └── exception/                    # 异常处理
-    ├── TodoNotFoundException.java      # 自定义异常
+    ├── TodoNotFoundException.java      # 待办事项未找到异常
+    ├── NoteNotFoundException.java       # 笔记未找到异常
     └── GlobalExceptionHandler.java     # 全局异常处理器
         - @RestControllerAdvice
         - 统一异常响应格式
@@ -105,8 +122,29 @@ com.todo/
 | text | VARCHAR(500) | NOT NULL | 待办内容 |
 | completed | BOOLEAN | NOT NULL | 完成状态 |
 | priority | VARCHAR(20) | NOT NULL | 优先级 (LOW/MEDIUM/HIGH) |
+| user_id | BIGINT | FOREIGN KEY | 所属用户ID |
 | created_at | TIMESTAMP | NOT NULL | 创建时间 |
 | updated_at | TIMESTAMP | NOT NULL | 更新时间 |
+
+#### Note 表结构
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | 主键 |
+| title | VARCHAR(255) | NOT NULL | 笔记标题 |
+| content | TEXT | NOT NULL | 笔记内容（Markdown） |
+| user_id | BIGINT | FOREIGN KEY | 所属用户ID |
+| updated_at | TIMESTAMP | NOT NULL | 更新时间 |
+
+#### User 表结构
+
+| 字段名 | 类型 | 约束 | 说明 |
+|--------|------|------|------|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | 主键 |
+| username | VARCHAR(50) | NOT NULL, UNIQUE | 用户名 |
+| password | VARCHAR(255) | NOT NULL | 密码（BCrypt加密） |
+| email | VARCHAR(100) | NOT NULL, UNIQUE | 邮箱 |
+| created_at | TIMESTAMP | NOT NULL | 创建时间 |
 
 #### JPA 特性
 
@@ -118,6 +156,15 @@ com.todo/
 
 #### RESTful 端点
 
+**认证 API（无需 Token）**
+
+| 方法 | 路径 | 功能 | 请求体 | 响应 |
+|------|------|------|--------|------|
+| POST | `/api/auth/register` | 用户注册 | `RegisterRequest` | `AuthResponse` |
+| POST | `/api/auth/login` | 用户登录 | `LoginRequest` | `AuthResponse` |
+
+**待办事项 API（需要 Token）**
+
 | 方法 | 路径 | 功能 | 请求体 | 响应 |
 |------|------|------|--------|------|
 | GET | `/api/todos` | 获取所有待办 | - | `List<Todo>` |
@@ -127,6 +174,17 @@ com.todo/
 | PUT | `/api/todos/{id}` | 完整更新 | `Map` | `Todo` |
 | PATCH | `/api/todos/{id}` | 部分更新 | `Map` | `Todo` |
 | DELETE | `/api/todos/{id}` | 删除待办 | - | `204 No Content` |
+
+**笔记 API（需要 Token）**
+
+| 方法 | 路径 | 功能 | 请求体 | 响应 |
+|------|------|------|--------|------|
+| GET | `/api/notes` | 获取所有笔记 | - | `List<Note>` |
+| GET | `/api/notes/{id}` | 获取单个笔记 | - | `Note` |
+| POST | `/api/notes` | 创建笔记 | `NoteRequest` | `Note` |
+| PUT | `/api/notes/{id}` | 完整更新 | `NoteRequest` | `Note` |
+| PATCH | `/api/notes/{id}` | 部分更新 | `Map` | `Note` |
+| DELETE | `/api/notes/{id}` | 删除笔记 | - | `204 No Content` |
 
 #### 状态码
 

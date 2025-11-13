@@ -33,7 +33,10 @@ public class Todo {
     private String durationUnit; // 时长单位：MINUTES, HOURS, DAYS
     
     @Column(nullable = true)
-    private LocalDateTime dueDate; // 非每日任务截止时间（可选）
+    private LocalDateTime dueDate; // 非每日任务截止时间（可选，向后兼容）
+    
+    @Column(nullable = true)
+    private LocalDateTime deadline; // 截止日期（新增字段）
     
     @Column(nullable = false)
     @JsonProperty("isDaily")
@@ -61,6 +64,7 @@ public class Todo {
         this.isDaily = false;
         this.durationUnit = null; // 默认为null，只有在设置了estimatedDuration时才设置
         this.dueDate = null;
+        this.deadline = null;
     }
 
     public Todo(Long id, String text, boolean completed, String priority) {
@@ -203,6 +207,15 @@ public class Todo {
 
     public void setLastResetDate(LocalDateTime lastResetDate) {
         this.lastResetDate = lastResetDate;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
         this.updatedAt = LocalDateTime.now();
     }
 }

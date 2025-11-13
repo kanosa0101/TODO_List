@@ -20,7 +20,9 @@ public class TodoRequest {
     
     private Boolean isDaily; // 是否为每日任务
 
-    private LocalDateTime dueDate; // 非每日任务截止时间（可选）
+    private LocalDateTime dueDate; // 非每日任务截止时间（可选，向后兼容）
+
+    private LocalDateTime deadline; // 截止日期（新增字段）
 
     public TodoRequest() {
     }
@@ -84,6 +86,14 @@ public class TodoRequest {
 
     public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
     }
 }
 

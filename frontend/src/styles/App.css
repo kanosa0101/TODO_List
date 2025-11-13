@@ -4,6 +4,11 @@
   margin: 0 auto;
 }
 
+/* 笔记页面需要更宽的容器 */
+.note-page.app {
+  max-width: 1600px;
+}
+
 .container {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-radius: 24px;

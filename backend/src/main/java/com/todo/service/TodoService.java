@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TodoService {
@@ -62,6 +64,12 @@ public class TodoService {
                     todo.setDurationUnit("MINUTES");
                 }
                 
+                // 向后兼容：如果deadline为空但dueDate不为空，将dueDate复制到deadline
+                if (todo.getDeadline() == null && todo.getDueDate() != null) {
+                    todo.setDeadline(todo.getDueDate());
+                    todoRepository.save(todo);
+                }
+                
                 if (todo.isDaily()) {
                     if (todo.getLastResetDate() != null) {
                         LocalDate lastResetDate = todo.getLastResetDate().toLocalDate();
@@ -87,7 +95,25 @@ public class TodoService {
             }
         }
         
-        return todos;
+        // 排序逻辑：
+        // 1. 非每日任务按deadline升序（越紧急越靠上），deadline为null视为最远
+        // 2. 每日任务固定沉底
+        // 3. 截止时间相同则按created_at先后
+        List<Todo> sortedTodos = todos.stream()
+            .sorted(Comparator
+                .comparing((Todo t) -> t.isDaily()) // 每日任务排在后面
+                .thenComparing((Todo t) -> {
+                    // 非每日任务按deadline排序，null视为最远（使用最大时间）
+                    if (t.isDaily()) {
+                        return LocalDateTime.MAX;
+                    }
+                    return t.getDeadline() != null ? t.getDeadline() : LocalDateTime.MAX;
+                })
+                .thenComparing(Todo::getCreatedAt) // 相同deadline按创建时间排序
+            )
+            .collect(Collectors.toList());
+        
+        return sortedTodos;
     }
 
     public Optional<Todo> getTodoById(Long id) {
@@ -133,9 +159,11 @@ public class TodoService {
                 existingTodo.setLastResetDate(LocalDateTime.now());
             }
             existingTodo.setDueDate(null);
+            existingTodo.setDeadline(null);
         } else {
             existingTodo.setLastResetDate(null);
             existingTodo.setDueDate(updatedTodo.getDueDate());
+            existingTodo.setDeadline(updatedTodo.getDeadline());
         }
         existingTodo.setUpdatedAt(LocalDateTime.now());
         

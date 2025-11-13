@@ -14,17 +14,35 @@
 │   │   │   ├── java/com/todo/
 │   │   │   │   ├── TodoApplication.java         # 应用入口
 │   │   │   │   ├── controller/                  # 控制器层（REST API）
-│   │   │   │   │   └── TodoController.java
+│   │   │   │   │   ├── TodoController.java      # 待办事项控制器
+│   │   │   │   │   ├── NoteController.java      # 笔记控制器
+│   │   │   │   │   └── AuthController.java      # 认证控制器
 │   │   │   │   ├── service/                     # 服务层（业务逻辑）
-│   │   │   │   │   └── TodoService.java
+│   │   │   │   │   ├── TodoService.java          # 待办事项服务
+│   │   │   │   │   ├── NoteService.java          # 笔记服务
+│   │   │   │   │   └── AuthService.java         # 认证服务
 │   │   │   │   ├── repository/                  # 数据访问层
-│   │   │   │   │   └── TodoRepository.java      # JPA Repository 接口
+│   │   │   │   │   ├── TodoRepository.java      # 待办事项 Repository
+│   │   │   │   │   ├── NoteRepository.java      # 笔记 Repository
+│   │   │   │   │   └── UserRepository.java      # 用户 Repository
 │   │   │   │   ├── model/                       # 数据模型
-│   │   │   │   │   └── Todo.java
+│   │   │   │   │   ├── Todo.java                # 待办事项实体
+│   │   │   │   │   ├── Note.java                # 笔记实体
+│   │   │   │   │   └── User.java                # 用户实体
 │   │   │   │   ├── dto/                         # 数据传输对象
-│   │   │   │   │   └── TodoRequest.java
+│   │   │   │   │   ├── TodoRequest.java         # 待办事项请求 DTO
+│   │   │   │   │   ├── NoteRequest.java         # 笔记请求 DTO
+│   │   │   │   │   ├── LoginRequest.java        # 登录请求 DTO
+│   │   │   │   │   └── RegisterRequest.java     # 注册请求 DTO
+│   │   │   │   ├── security/                    # 安全相关
+│   │   │   │   │   ├── JwtAuthenticationFilter.java  # JWT 认证过滤器
+│   │   │   │   │   └── UserDetailsServiceImpl.java   # 用户详情服务
+│   │   │   │   ├── util/                        # 工具类
+│   │   │   │   │   ├── JwtUtil.java             # JWT 工具类
+│   │   │   │   │   └── SecurityUtil.java        # 安全工具类
 │   │   │   │   └── exception/                   # 异常处理
 │   │   │   │       ├── TodoNotFoundException.java
+│   │   │   │       ├── NoteNotFoundException.java
 │   │   │   │       └── GlobalExceptionHandler.java
 │   │   │   └── resources/
 │   │   │       └── application.properties       # 配置文件
@@ -38,9 +56,16 @@
 │   │   │   ├── TodoItem.jsx         # 待办项组件
 │   │   │   ├── TodoForm.jsx         # 表单组件
 │   │   │   ├── TodoFilter.jsx      # 筛选组件
-│   │   │   └── TodoStats.jsx       # 统计组件
+│   │   │   ├── TodoStats.jsx       # 统计组件
+│   │   │   ├── NoteApp.jsx         # 笔记应用组件
+│   │   │   ├── LoginForm.jsx       # 登录表单
+│   │   │   ├── RegisterForm.jsx    # 注册表单
+│   │   │   ├── ProtectedRoute.jsx  # 路由保护组件
+│   │   │   └── UserMenu.jsx        # 用户菜单组件
 │   │   ├── services/               # API 服务层
-│   │   │   └── todoService.js      # 待办事项 API
+│   │   │   ├── todoService.js      # 待办事项 API
+│   │   │   ├── noteService.js      # 笔记 API
+│   │   │   └── authService.js      # 认证服务
 │   │   ├── utils/                  # 工具函数
 │   │   │   ├── constants.js        # 常量定义
 │   │   │   └── dateUtils.js        # 日期工具
@@ -48,7 +73,7 @@
 │   │   │   ├── index.css           # 全局样式
 │   │   │   ├── App.css             # 应用样式
 │   │   │   └── components.css     # 组件样式
-│   │   ├── App.jsx                 # 主应用组件
+│   │   ├── App.jsx                 # 主应用组件（路由配置）
 │   │   └── main.jsx                # React 入口
 │   ├── index.html                   # HTML 模板
 │   ├── vite.config.js               # Vite 配置
@@ -111,6 +136,16 @@ App (主容器)
 - ⏱️ **任务时长**：支持设置预计时长（分钟/小时/天）
 - 📈 **进度跟踪**：支持设置任务步骤数并跟踪完成进度
 - 📦 **分类显示**：每日任务和其他任务分类显示，已完成任务更透明
+
+### 笔记功能
+- 📝 **Markdown 笔记**：支持 Markdown 格式的笔记编辑和预览
+- ✏️ **Monaco 编辑器**：使用 VS Code 同款编辑器，支持语法高亮
+- 👁️ **实时预览**：支持编辑模式和预览模式切换
+- 💾 **自动保存**：支持 Ctrl+S 手动保存，显示保存状态
+- 📤 **文件上传**：支持上传 .md 文件导入笔记
+- ⬇️ **文件下载**：支持将笔记导出为 .md 文件
+- 🔍 **笔记列表**：侧边栏显示所有笔记，按更新时间排序
+- 🔐 **用户隔离**：每个用户只能访问自己的笔记
 
 ## 🚀 快速开始
 
@@ -348,6 +383,36 @@ npm run dev
 #### 删除待办事项
 - `DELETE /api/todos/{id}` - 删除待办事项
 
+### 笔记 API（需要 Token）
+
+所有笔记 API 都需要在请求头中添加 `Authorization: Bearer <token>`
+
+#### 获取笔记
+- `GET /api/notes` - 获取当前用户的所有笔记（按更新时间倒序）
+- `GET /api/notes/{id}` - 获取单个笔记
+
+#### 创建笔记
+- `POST /api/notes` - 创建新笔记
+  ```json
+  {
+    "title": "笔记标题",
+    "content": "笔记内容（Markdown格式）"
+  }
+  ```
+
+#### 更新笔记
+- `PUT /api/notes/{id}` - 完整更新笔记
+- `PATCH /api/notes/{id}` - 部分更新笔记
+  ```json
+  {
+    "title": "更新后的标题",
+    "content": "更新后的内容"
+  }
+  ```
+
+#### 删除笔记
+- `DELETE /api/notes/{id}` - 删除笔记
+
 ## 🛠️ 技术栈
 
 ### 后端
@@ -363,6 +428,9 @@ npm run dev
 ### 前端
 - **React 18** - UI 框架
 - **Vite** - 构建工具
+- **React Router** - 路由管理
+- **Monaco Editor** - 代码编辑器（VS Code 同款）
+- **React Markdown** - Markdown 渲染
 - **现代 CSS** - 渐变、动画、响应式设计
 
 ## 📊 数据模型
@@ -394,6 +462,17 @@ Todo {
   createdAt: LocalDateTime    // 创建时间
   updatedAt: LocalDateTime    // 更新时间
   user: User                  // 所属用户（外键）
+}
+```
+
+### Note（笔记）
+```java
+Note {
+  id: Long                    // 唯一标识
+  title: String              // 笔记标题
+  content: String            // 笔记内容（Markdown格式）
+  updatedAt: LocalDateTime   // 更新时间
+  user: User                 // 所属用户（外键）
 }
 ```
 
@@ -437,7 +516,7 @@ Todo {
 - ✅ **密码加密** - BCrypt 加密存储
 - ✅ **Token 管理** - 自动过期处理（24小时）
 - ✅ **路由保护** - 未登录自动跳转登录页
-- ✅ **用户隔离** - 每个用户只能访问自己的待办事项
+- ✅ **用户隔离** - 每个用户只能访问自己的待办事项和笔记
 
 ### 认证 API
 

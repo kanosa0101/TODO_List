@@ -8,6 +8,8 @@ import TodoFilter from './TodoFilter';
 import TodoList from './TodoList';
 import UserMenu from './UserMenu';
 import CurrentTime from './CurrentTime';
+import Calendar from './Calendar';
+import Navigation from './Navigation';
 import '../styles/App.css';
 
 function TodoApp() {
@@ -163,6 +165,7 @@ function TodoApp() {
     <div className="app">
       <div className="container">
         <UserMenu />
+        <Navigation />
         <div className="header">
           <h1>
             <span className="icon">✨</span>
@@ -170,6 +173,7 @@ function TodoApp() {
           </h1>
           <TodoStats todos={allTodos} />
           <CurrentTime />
+          <Calendar todos={allTodos} />
         </div>
 
         <div style={{ marginBottom: '24px', textAlign: 'center' }}>

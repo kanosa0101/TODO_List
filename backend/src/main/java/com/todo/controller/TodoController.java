@@ -105,8 +105,16 @@ public class TodoController {
         if (todo.isDaily()) {
             todo.setLastResetDate(java.time.LocalDateTime.now());
             todo.setDueDate(null);
-        } else if (request.getDueDate() != null) {
-            todo.setDueDate(request.getDueDate());
+            todo.setDeadline(null);
+        } else {
+            // 优先使用deadline，如果没有则使用dueDate（向后兼容）
+            if (request.getDeadline() != null) {
+                todo.setDeadline(request.getDeadline());
+                todo.setDueDate(request.getDeadline()); // 同时设置dueDate以保持兼容
+            } else if (request.getDueDate() != null) {
+                todo.setDueDate(request.getDueDate());
+                todo.setDeadline(request.getDueDate()); // 将dueDate复制到deadline
+            }
         }
         
         Todo createdTodo = todoService.createTodo(todo);
@@ -140,8 +148,21 @@ public class TodoController {
         updatedTodo.setDaily(updatedIsDaily);
         if (updatedIsDaily) {
             updatedTodo.setDueDate(null);
+            updatedTodo.setDeadline(null);
         } else {
-            updatedTodo.setDueDate(extractLocalDateTime(updates, "dueDate", existingTodo.getDueDate()));
+            // 优先使用deadline，如果没有则使用dueDate（向后兼容）
+            LocalDateTime deadline = extractLocalDateTime(updates, "deadline", existingTodo.getDeadline());
+            LocalDateTime dueDate = extractLocalDateTime(updates, "dueDate", existingTodo.getDueDate());
+            if (deadline != null) {
+                updatedTodo.setDeadline(deadline);
+                updatedTodo.setDueDate(deadline); // 同时设置dueDate以保持兼容
+            } else if (dueDate != null) {
+                updatedTodo.setDueDate(dueDate);
+                updatedTodo.setDeadline(dueDate); // 将dueDate复制到deadline
+            } else {
+                updatedTodo.setDueDate(existingTodo.getDueDate());
+                updatedTodo.setDeadline(existingTodo.getDeadline());
+            }
         }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));
@@ -189,10 +210,32 @@ public class TodoController {
         updatedTodo.setDaily(updatedIsDaily);
         if (updatedIsDaily) {
             updatedTodo.setDueDate(null);
-        } else if (updates.containsKey("dueDate")) {
-            updatedTodo.setDueDate(extractLocalDateTime(updates, "dueDate", existingTodo.getDueDate()));
+            updatedTodo.setDeadline(null);
         } else {
-            updatedTodo.setDueDate(existingTodo.getDueDate());
+            // 优先使用deadline，如果没有则使用dueDate（向后兼容）
+            LocalDateTime deadline = null;
+            LocalDateTime dueDate = null;
+            if (updates.containsKey("deadline")) {
+                deadline = extractLocalDateTime(updates, "deadline", null);
+            } else {
+                deadline = existingTodo.getDeadline();
+            }
+            if (updates.containsKey("dueDate")) {
+                dueDate = extractLocalDateTime(updates, "dueDate", null);
+            } else {
+                dueDate = existingTodo.getDueDate();
+            }
+            
+            if (deadline != null) {
+                updatedTodo.setDeadline(deadline);
+                updatedTodo.setDueDate(deadline); // 同时设置dueDate以保持兼容
+            } else if (dueDate != null) {
+                updatedTodo.setDueDate(dueDate);
+                updatedTodo.setDeadline(dueDate); // 将dueDate复制到deadline
+            } else {
+                updatedTodo.setDueDate(existingTodo.getDueDate());
+                updatedTodo.setDeadline(existingTodo.getDeadline());
+            }
         }
 
         return ResponseEntity.ok(todoService.updateTodo(id, updatedTodo));

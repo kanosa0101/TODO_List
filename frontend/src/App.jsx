@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import TodoApp from './components/TodoApp';
+import NoteApp from './components/NoteApp';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -44,6 +45,11 @@ function App() {
         <Route path="/" element={
           <ProtectedRoute>
             <TodoApp />
+          </ProtectedRoute>
+        } />
+        <Route path="/notes" element={
+          <ProtectedRoute>
+            <NoteApp />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

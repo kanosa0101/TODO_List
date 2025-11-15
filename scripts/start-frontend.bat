@@ -2,7 +2,7 @@
 echo Starting Frontend Server...
 
 :: 在新窗口中启动前端服务器
-start "Todo Frontend" cmd /k "cd /d %~dp0frontend && echo [Frontend] Starting... && npm run dev"
+start "Todo Frontend" cmd /k "cd /d %~dp0..\frontend && echo [Frontend] Starting... && npm run dev"
 
 :: 等待服务器启动
 echo Waiting for server to start (about 5 seconds)...

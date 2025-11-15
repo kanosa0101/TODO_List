@@ -40,6 +40,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/doc.html", "/webjars/**").permitAll() // 允许访问Swagger和Knife4j文档
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 允许CORS预检请求
                 .anyRequest().authenticated()
             )

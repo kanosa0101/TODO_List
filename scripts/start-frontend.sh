@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "Starting Frontend Server..."
-cd frontend
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SCRIPT_DIR/frontend"
 
 # 在后台启动前端服务器
 npm run dev &

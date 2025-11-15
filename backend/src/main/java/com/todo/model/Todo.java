@@ -1,23 +1,29 @@
 package com.todo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "todos")
+@Schema(description = "待办事项实体")
 public class Todo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "待办事项ID", example = "1")
     private Long id;
     
     @Column(nullable = false, length = 500)
+    @Schema(description = "待办事项内容", example = "完成项目文档")
     private String text;
     
     @Column(nullable = false)
+    @Schema(description = "是否已完成", example = "false")
     private boolean completed;
     
     @Column(nullable = false, length = 20)
+    @Schema(description = "优先级：LOW(低)、MEDIUM(中)、HIGH(高)", example = "MEDIUM")
     private String priority; // LOW, MEDIUM, HIGH
     
     @Column(nullable = true)

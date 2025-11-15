@@ -1,8 +1,16 @@
 package com.todo.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "认证响应，包含JWT Token和用户信息")
 public class AuthResponse {
+    @Schema(description = "JWT Token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
+    
+    @Schema(description = "用户名", example = "admin")
     private String username;
+    
+    @Schema(description = "用户ID", example = "1")
     private Long userId;
 
     public AuthResponse() {

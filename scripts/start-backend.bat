@@ -42,6 +42,19 @@ echo.
 echo ========================================
 echo 启动后端服务器...
 echo ========================================
-cd backend
-mvn spring-boot:run
+echo.
+echo 正在新窗口中启动后端服务器...
+echo 后端服务器地址: http://localhost:3001
+echo.
+echo 提示：后端服务器将在新窗口中运行
+echo 关闭该窗口即可停止服务器
+echo.
+
+:: 在新窗口中启动后端，使用 /k 保持窗口打开
+start "Todo Backend Server" cmd /k "cd /d %~dp0..\backend && echo [Backend] Starting Spring Boot... && echo. && mvn spring-boot:run"
+
+echo 后端服务器正在启动中...
+echo 请查看新打开的窗口查看启动日志
+echo.
+pause
 

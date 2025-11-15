@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 获取脚本所在目录的父目录（项目根目录）
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
 echo "========================================"
 echo "   Todo 应用一键启动脚本"
 echo "========================================"
@@ -68,7 +71,7 @@ echo ""
 echo "[3/6] 检查数据库配置..."
 echo ""
 
-if [ -f "backend/src/main/resources/application.properties" ]; then
+if [ -f "$SCRIPT_DIR/backend/src/main/resources/application.properties" ]; then
     echo "  ✓ 配置文件存在"
 else
     echo "  [错误] 未找到配置文件"
@@ -79,17 +82,17 @@ echo ""
 echo "[4/6] 检查前端依赖..."
 echo ""
 
-if [ -d "frontend/node_modules" ]; then
+if [ -d "$SCRIPT_DIR/frontend/node_modules" ]; then
     echo "  ✓ 前端依赖已安装"
 else
     echo "  正在安装前端依赖..."
-    cd frontend
+    cd "$SCRIPT_DIR/frontend"
     npm install
     if [ $? -ne 0 ]; then
         echo "  [错误] 前端依赖安装失败"
         exit 1
     fi
-    cd ..
+    cd "$SCRIPT_DIR"
     echo "  ✓ 前端依赖安装完成"
 fi
 

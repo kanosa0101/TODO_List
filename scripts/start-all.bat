@@ -104,10 +104,10 @@ echo.
 
 :: 检查数据库配置文件
 echo   Checking application.properties...
-if exist "%~dp0backend\src\main\resources\application.properties" (
+if exist "%~dp0..\backend\src\main\resources\application.properties" (
     echo   OK: Configuration file found
 ) else (
-    echo   ERROR: Configuration file not found at: %~dp0backend\src\main\resources\application.properties
+    echo   ERROR: Configuration file not found at: %~dp0..\backend\src\main\resources\application.properties
     echo   Current directory: %CD%
     pause
     exit /b 1
@@ -117,18 +117,18 @@ echo.
 echo [4/6] 检查前端依赖...
 echo.
 
-if exist "%~dp0frontend\node_modules" (
+if exist "%~dp0..\frontend\node_modules" (
     echo   OK: Frontend dependencies installed
 ) else (
     echo   Installing frontend dependencies...
-    cd /d "%~dp0frontend"
+    cd /d "%~dp0..\frontend"
     call npm install
     if %errorLevel% neq 0 (
         echo   ERROR: Failed to install frontend dependencies
         pause
         exit /b 1
     )
-    cd /d "%~dp0"
+    cd /d "%~dp0.."
     echo   OK: Frontend dependencies installed
 )
 
@@ -137,7 +137,7 @@ echo [5/6] 启动后端服务器...
 echo.
 
 :: 在新窗口中启动后端
-start "Todo Backend" cmd /k "cd /d %~dp0backend && echo [Backend] Starting... && mvn spring-boot:run"
+start "Todo Backend" cmd /k "cd /d %~dp0..\backend && echo [Backend] Starting... && mvn spring-boot:run"
 
 :: 等待后端启动
 echo   等待后端服务器启动（约15秒）...
@@ -152,7 +152,7 @@ echo [6/6] 启动前端服务器...
 echo.
 
 :: 在新窗口中启动前端
-start "Todo Frontend" cmd /k "cd /d %~dp0frontend && echo [Frontend] Starting... && npm run dev"
+start "Todo Frontend" cmd /k "cd /d %~dp0..\frontend && echo [Frontend] Starting... && npm run dev"
 
 :: 等待前端服务器启动
 echo   Waiting for frontend server to start (about 5 seconds)...

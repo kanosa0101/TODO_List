@@ -28,6 +28,14 @@ echo ""
 echo "========================================"
 echo "启动后端服务器..."
 echo "========================================"
-cd backend
+echo ""
+echo "后端服务器地址: http://localhost:3001"
+echo ""
+echo "提示：后端服务器将在当前终端中运行"
+echo "按 Ctrl+C 可停止服务器"
+echo ""
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SCRIPT_DIR/backend"
 mvn spring-boot:run
 

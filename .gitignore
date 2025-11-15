@@ -6,6 +6,7 @@ yarn.lock
 # 构建输出
 dist/
 build/
+target/
 
 # 环境变量
 .env
@@ -29,8 +30,8 @@ Thumbs.db
 todos.json
 backend/todos.json
 
-# 数据库文件（H2已迁移到MySQL，保留此规则以防万一）
-data/
+# 数据库文件（H2已迁移到MySQL）
+backend/data/
 *.db
 *.mv.db
 *.trace.db

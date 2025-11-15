@@ -22,7 +22,8 @@ function RegisterForm() {
         username: response.username,
         userId: response.userId,
       });
-      navigate('/');
+      // 使用 window.location 强制刷新页面，确保认证状态更新
+      window.location.href = '/';
     } catch (err) {
       setError(err.message || '注册失败，请检查输入信息');
     } finally {
@@ -33,7 +34,7 @@ function RegisterForm() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>注册</h2>
+        <h2>创建账号</h2>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
           
@@ -44,6 +45,7 @@ function RegisterForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="请输入用户名（3-50个字符）"
               required
               minLength={3}
               maxLength={50}
@@ -60,6 +62,7 @@ function RegisterForm() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="请输入邮箱地址"
               required
               disabled={loading}
             />
@@ -72,6 +75,7 @@ function RegisterForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入密码（至少6个字符）"
               required
               minLength={6}
               maxLength={100}

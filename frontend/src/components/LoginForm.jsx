@@ -21,7 +21,8 @@ function LoginForm() {
         username: response.username,
         userId: response.userId,
       });
-      navigate('/');
+      // 使用 window.location 强制刷新页面，确保认证状态更新
+      window.location.href = '/';
     } catch (err) {
       setError(err.message || '登录失败，请检查用户名和密码');
     } finally {
@@ -32,7 +33,7 @@ function LoginForm() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>登录</h2>
+        <h2>待办事项</h2>
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
           
@@ -43,6 +44,7 @@ function LoginForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="请输入用户名"
               required
               autoFocus
               disabled={loading}
@@ -56,6 +58,7 @@ function LoginForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入密码"
               required
               disabled={loading}
             />

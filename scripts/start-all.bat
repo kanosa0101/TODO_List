@@ -66,8 +66,17 @@ if %errorLevel% neq 0 (
 for /f "tokens=*" %%i in ('npm -v 2^>^&1') do set NPM_VERSION=%%i
 echo   ✓ npm: !NPM_VERSION!
 
+:: 检查 Python（Agent 服务需要）
+where python >nul 2>&1
+if %errorLevel% neq 0 (
+    echo   [警告] 未找到 Python，Agent 服务可能无法启动
+) else (
+    for /f "tokens=*" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
+    echo   ✓ Python: !PYTHON_VERSION!
+)
+
 echo.
-echo [2/6] 检查 MySQL 服务...
+echo [2/7] 检查 MySQL 服务...
 echo.
 
 :: 检查 MySQL 端口是否可访问
@@ -99,7 +108,7 @@ if %NEED_ADMIN% equ 1 (
 )
 
 echo.
-echo [3/6] Checking database configuration...
+echo [3/7] Checking database configuration...
 echo.
 
 :: 检查数据库配置文件
@@ -114,7 +123,7 @@ if exist "%~dp0..\backend\src\main\resources\application.properties" (
 )
 
 echo.
-echo [4/6] 检查前端依赖...
+echo [4/7] 检查前端依赖...
 echo.
 
 if exist "%~dp0..\frontend\node_modules" (
@@ -133,7 +142,7 @@ if exist "%~dp0..\frontend\node_modules" (
 )
 
 echo.
-echo [5/6] 启动后端服务器...
+echo [5/7] 启动后端服务器...
 echo.
 
 :: 在新窗口中启动后端
@@ -148,7 +157,50 @@ echo   测试后端连接...
 powershell -Command "$ErrorActionPreference='SilentlyContinue'; $response = Invoke-WebRequest -Uri 'http://localhost:3001/api/todos' -UseBasicParsing -TimeoutSec 3; if ($response.StatusCode -eq 200) { Write-Host '  ✓ 后端服务器启动成功！' } else { Write-Host '  [警告] 后端可能还在启动中...' }" 2>nul
 
 echo.
-echo [6/6] 启动前端服务器...
+echo [6/7] 启动 Agent 服务...
+echo.
+
+:: 检查 Agent 目录是否存在
+if not exist "%~dp0..\agent" (
+    echo   [警告] Agent 目录不存在，跳过 Agent 服务启动
+) else (
+    :: 检查并创建虚拟环境
+    if not exist "%~dp0..\agent\venv" (
+        echo   创建 Agent 虚拟环境...
+        cd /d "%~dp0..\agent"
+        python -m venv venv
+        if errorlevel 1 (
+            echo   [警告] 无法创建虚拟环境，Agent 服务可能无法启动
+        )
+        cd /d "%~dp0.."
+    )
+    
+    :: 检查 Agent 服务配置
+    if exist "%~dp0..\agent\.env" (
+        echo   Agent 配置文件存在
+    ) else (
+        echo   [提示] Agent .env 文件不存在，将尝试创建
+        if exist "%~dp0..\agent\.env.example" (
+            copy "%~dp0..\agent\.env.example" "%~dp0..\agent\.env" >nul 2>&1
+            echo   [提示] 已创建 .env 文件，请编辑并配置 API 密钥
+        )
+    )
+    
+    :: 在新窗口中启动 Agent 服务（使用 run.bat）
+    if exist "%~dp0..\agent\run.bat" (
+        start "AI Agent Service" cmd /k "cd /d %~dp0..\agent && run.bat"
+    ) else (
+        :: 如果没有 run.bat，使用旧方式
+        start "AI Agent Service" cmd /k "cd /d %~dp0..\agent && if exist venv (call venv\Scripts\activate.bat) else (python -m venv venv && call venv\Scripts\activate.bat && pip install -r requirements.txt -q) && python app.py"
+    )
+    
+    :: 等待 Agent 服务启动
+    echo   等待 Agent 服务启动（约3秒）...
+    timeout /t 3 /nobreak >nul
+)
+
+echo.
+echo [7/7] 启动前端服务器...
 echo.
 
 :: 在新窗口中启动前端
@@ -168,13 +220,15 @@ echo   启动完成！
 echo ========================================
 echo.
 echo 后端服务器: http://localhost:3001
+echo Agent 服务: http://localhost:5000
 echo 前端应用:   http://localhost:3000
 echo.
 echo 提示：
 echo - 浏览器已自动打开前端页面
-echo - 后端和前端已在独立窗口中启动
+echo - 后端、Agent 和前端已在独立窗口中启动
 echo - 关闭窗口即可停止对应的服务
 echo - 如需停止所有服务，请关闭所有相关窗口
+echo - 如果 Agent 服务启动失败，请检查 agent/.env 配置
 echo.
 pause
 

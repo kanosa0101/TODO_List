@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import TodoApp from './components/TodoApp';
 import NoteApp from './components/NoteApp';
+import AgentApp from './components/AgentApp';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -40,6 +41,12 @@ function App() {
         <Route path="/notes" element={
           <ProtectedRoute>
             <NoteApp />
+          </ProtectedRoute>
+        } />
+        {/* AI助手页面 - 需要认证 */}
+        <Route path="/agent" element={
+          <ProtectedRoute>
+            <AgentApp />
           </ProtectedRoute>
         } />
         {/* 其他路径 - 未认证时显示登录页面，已认证时重定向到主页 */}

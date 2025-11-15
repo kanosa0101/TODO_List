@@ -18,6 +18,12 @@ function Navigation() {
       >
         📝 笔记
       </Link>
+      <Link 
+        to="/agent" 
+        className={`nav-link ${location.pathname === '/agent' ? 'active' : ''}`}
+      >
+        🤖 AI助手
+      </Link>
     </nav>
   );
 }

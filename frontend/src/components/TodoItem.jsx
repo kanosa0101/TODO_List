@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { formatDate } from '../utils/dateUtils';
 import { PRIORITY_COLORS, PRIORITY_LABELS } from '../utils/constants';
+import TodoEditForm from './TodoEditForm';
 import '../styles/components.css';
 
 function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(todo.text);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   const dueDateText = formatDate(todo.dueDate);
 
@@ -28,16 +28,17 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
   const overdue = isOverdue();
   const dueSoon = isDueSoon(overdue);
 
-  const handleSave = () => {
-    if (editText.trim()) {
-      onUpdate(todo.id, { text: editText });
-      setIsEditing(false);
-    }
+  const handleEditClick = () => {
+    setShowEditForm(true);
   };
 
-  const handleCancel = () => {
-    setEditText(todo.text);
-    setIsEditing(false);
+  const handleEditSubmit = (updates) => {
+    onUpdate(todo.id, updates);
+    setShowEditForm(false);
+  };
+
+  const handleEditCancel = () => {
+    setShowEditForm(false);
   };
 
   const handleProgressChange = (delta) => {
@@ -67,36 +68,24 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
   };
 
   return (
-    <div className={`todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority?.toLowerCase()}`}>
-      <div className="todo-content">
-        <input
-          type="checkbox"
-          checked={todo.completed}
-          onChange={() => onToggle(todo.id, todo.completed)}
-          className="todo-checkbox"
+    <>
+      {showEditForm && (
+        <TodoEditForm
+          todo={todo}
+          onSubmit={handleEditSubmit}
+          onCancel={handleEditCancel}
         />
-        <div className="todo-main">
-          {isEditing ? (
-            <div className="edit-section">
-              <input
-                type="text"
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') handleSave();
-                  if (e.key === 'Escape') handleCancel();
-                }}
-                className="edit-input"
-                autoFocus
-              />
-              <div className="edit-actions">
-                <button onClick={handleSave} className="save-btn">✓</button>
-                <button onClick={handleCancel} className="cancel-btn">✕</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <span className="todo-text">{todo.text}</span>
+      )}
+      <div className={`todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority?.toLowerCase()}`}>
+        <div className="todo-content">
+          <input
+            type="checkbox"
+            checked={todo.completed}
+            onChange={() => onToggle(todo.id, todo.completed)}
+            className="todo-checkbox"
+          />
+          <div className="todo-main">
+            <span className="todo-text">{todo.text}</span>
               <div className="todo-meta">
                 <span
                   className="priority-badge"
@@ -154,11 +143,8 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
                   </div>
                 </div>
               )}
-            </>
-          )}
+          </div>
         </div>
-      </div>
-      {!isEditing && (
         <div className="todo-actions">
           <select
             value={todo.priority}
@@ -170,15 +156,15 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
             <option value="MEDIUM">中</option>
             <option value="HIGH">高</option>
           </select>
-          <button onClick={() => setIsEditing(true)} className="edit-button" title="编辑">
+          <button onClick={handleEditClick} className="edit-button" title="编辑">
             ✏️
           </button>
           <button onClick={() => onDelete(todo.id)} className="delete-button" title="删除">
             🗑️
           </button>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 

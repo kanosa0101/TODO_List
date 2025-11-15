@@ -112,18 +112,40 @@ function TodoApp() {
     try {
       setError(null);
       const existingTodo = allTodos.find(t => t.id === id);
-      const updatedTodo = await todoService.updateTodo(id, {
-        ...existingTodo,
-        ...updates,
-      });
+      if (!existingTodo) {
+        setError('找不到要更新的任务');
+        return;
+      }
+      
+      // 构建完整的更新对象，确保所有字段都正确传递
+      const updateData = {
+        text: updates.text !== undefined ? updates.text : existingTodo.text,
+        priority: updates.priority !== undefined ? updates.priority : existingTodo.priority,
+        completed: updates.completed !== undefined ? updates.completed : existingTodo.completed,
+        isDaily: updates.isDaily !== undefined ? updates.isDaily : existingTodo.isDaily,
+        totalSteps: updates.totalSteps !== undefined ? updates.totalSteps : existingTodo.totalSteps,
+        completedSteps: updates.completedSteps !== undefined ? updates.completedSteps : existingTodo.completedSteps,
+        estimatedDuration: updates.estimatedDuration !== undefined ? updates.estimatedDuration : existingTodo.estimatedDuration,
+        durationUnit: updates.durationUnit !== undefined ? updates.durationUnit : existingTodo.durationUnit,
+        deadline: updates.deadline !== undefined ? updates.deadline : existingTodo.deadline,
+        dueDate: updates.dueDate !== undefined ? updates.dueDate : existingTodo.dueDate,
+      };
+      
+      // 如果变成每日任务，确保清除截止时间
+      if (updateData.isDaily) {
+        updateData.deadline = null;
+        updateData.dueDate = null;
+      }
+      
+      const updatedTodo = await todoService.updateTodo(id, updateData);
       setAllTodos(allTodos.map(t => t.id === id ? updatedTodo : t)); // 更新全部数据
       // applyFilter 会自动更新显示的数据
     } catch (err) {
       if (err.message === 'Unauthorized' || err.status === 401) {
         window.location.href = '/login';
       } else {
-        setError('更新待办事项失败');
-        console.error(err);
+        setError('更新待办事项失败: ' + (err.message || '未知错误'));
+        console.error('更新任务失败:', err);
       }
     }
   };

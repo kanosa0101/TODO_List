@@ -43,16 +43,22 @@ function App() {
           authService.isAuthenticated() ? <Navigate to="/" replace /> : <RegisterForm />
         } />
         <Route path="/" element={
-          <ProtectedRoute>
-            <TodoApp />
-          </ProtectedRoute>
+          authService.isAuthenticated() ? (
+            <ProtectedRoute>
+              <TodoApp />
+            </ProtectedRoute>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         } />
         <Route path="/notes" element={
           <ProtectedRoute>
             <NoteApp />
           </ProtectedRoute>
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={
+          authService.isAuthenticated() ? <Navigate to="/" replace /> : <Navigate to="/login" replace />
+        } />
       </Routes>
     </BrowserRouter>
   );

@@ -9,14 +9,35 @@ function AgentApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [streamingContent, setStreamingContent] = useState('');
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const checkIfAtBottom = () => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+      setShowScrollToBottom(!isAtBottom);
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.addEventListener('scroll', checkIfAtBottom);
+      checkIfAtBottom();
+      return () => {
+        messagesContainerRef.current?.removeEventListener('scroll', checkIfAtBottom);
+      };
+    }
   }, [messages, streamingContent]);
 
   const handleSend = async () => {
@@ -148,70 +169,80 @@ function AgentApp() {
             )}
           </div>
 
-          <div className="agent-messages">
-            {messages.length === 0 && !isLoading && (
-              <div className="welcome-message">
-                <div className="welcome-icon">💬</div>
-                <h2>开始对话</h2>
-                <p>输入您的问题，AI 助手将为您解答</p>
-              </div>
-            )}
-
-            {messages.map((message, index) => (
-              <div key={index} className={`message ${message.role}`}>
-                <div className="message-avatar">
-                  {message.role === 'user' ? '👤' : '🤖'}
+          <div className="agent-chat-container">
+            <div className="agent-messages" ref={messagesContainerRef}>
+              {messages.length === 0 && !isLoading && (
+                <div className="welcome-message">
+                  <div className="welcome-icon">💬</div>
+                  <h2>开始对话</h2>
+                  <p>输入您的问题，AI 助手将为您解答</p>
                 </div>
-                <div className="message-content">
-                  <div className="message-text">{message.content}</div>
-                  <div className="message-time">
-                    {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+              )}
+
+              {messages.map((message, index) => (
+                <div key={index} className={`message ${message.role}`}>
+                  <div className="message-avatar">
+                    {message.role === 'user' ? '👤' : '🤖'}
+                  </div>
+                  <div className="message-content">
+                    <div className="message-text">{message.content}</div>
+                    <div className="message-time">
+                      {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {isLoading && streamingContent && (
-              <div className="message assistant">
-                <div className="message-avatar">🤖</div>
-                <div className="message-content">
-                  <div className="message-text">{streamingContent}</div>
-                  <div className="message-typing">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+              {isLoading && streamingContent && (
+                <div className="message assistant">
+                  <div className="message-avatar">🤖</div>
+                  <div className="message-content">
+                    <div className="message-text">{streamingContent}</div>
+                    <div className="message-typing">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {isLoading && !streamingContent && (
-              <div className="message assistant">
-                <div className="message-avatar">🤖</div>
-                <div className="message-content">
-                  <div className="message-typing">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+              {isLoading && !streamingContent && (
+                <div className="message assistant">
+                  <div className="message-avatar">🤖</div>
+                  <div className="message-content">
+                    <div className="message-typing">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {error && (
-              <div className="error-message">
-                <span className="error-icon">⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
+              {error && (
+                <div className="error-message">
+                  <span className="error-icon">⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
 
-            <div ref={messagesEndRef} />
-          </div>
+              <div ref={messagesEndRef} />
+              {showScrollToBottom && (
+                <button 
+                  className="scroll-to-bottom-button"
+                  onClick={scrollToBottom}
+                  title="滚动到底部"
+                >
+                  ⬇️
+                </button>
+              )}
+            </div>
 
-          <div className="agent-input-container">
+            <div className="agent-input-container">
             <div className="agent-input-wrapper">
               <textarea
                 className="agent-input"
@@ -233,6 +264,7 @@ function AgentApp() {
             <div className="input-hint">
               AI 助手由 OpenAI 兼容 API 驱动
             </div>
+          </div>
           </div>
         </div>
       </div>

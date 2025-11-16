@@ -365,7 +365,7 @@ function NoteApp() {
                     {viewMode === 'edit' && (
                       <div className="note-editor-wrapper">
                         <Editor
-                          height="calc(100vh - 200px)"
+                          height="600px"
                           defaultLanguage="markdown"
                           value={content}
                           onChange={handleContentChange}

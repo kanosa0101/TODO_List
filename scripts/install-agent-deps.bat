@@ -44,6 +44,7 @@ echo     - flask
 echo     - flask-cors
 echo     - openai
 echo     - python-dotenv
+echo     - requests
 echo.
 
 pip install --upgrade pip

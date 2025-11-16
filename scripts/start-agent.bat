@@ -36,7 +36,7 @@ if not exist "requirements.txt" (
     exit /b 1
 )
 echo   正在安装 Python 依赖（这可能需要几分钟）...
-echo   依赖列表: flask, flask-cors, openai, python-dotenv
+echo   依赖列表: flask, flask-cors, openai, python-dotenv, requests
 pip install -r requirements.txt
 if errorlevel 1 (
     echo [错误] 依赖安装失败！

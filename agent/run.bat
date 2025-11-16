@@ -37,7 +37,7 @@ if errorlevel 1 (
 echo.
 
 echo [步骤 4] 检查依赖...
-python -c "import flask, flask_cors" 2>nul
+python -c "import flask, flask_cors, requests" 2>nul
 if errorlevel 1 (
     echo   ⚠️  依赖未安装，正在安装...
     pip install -r requirements.txt

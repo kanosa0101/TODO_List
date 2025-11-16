@@ -56,11 +56,18 @@ function AgentApp() {
     setStreamingContent('');
 
     try {
+      // 获取用户 token
+      const token = sessionStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch('/api/agent/chat/stream', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           messages: [
             ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -100,14 +107,32 @@ function AgentApp() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.error) {
-                throw new Error(data.error);
+                console.error('Agent 错误:', data.error);
+                setError(data.error);
+                setIsLoading(false);
+                setStreamingContent('');
+                // 如果已经有部分内容，保存它
+                if (assistantMessage.trim()) {
+                  setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: assistantMessage,
+                    timestamp: new Date().toISOString()
+                  }]);
+                }
+                return;
               }
               if (data.done) {
-                setMessages(prev => [...prev, {
-                  role: 'assistant',
-                  content: assistantMessage,
-                  timestamp: new Date().toISOString()
-                }]);
+                // 只有当有内容时才保存消息
+                if (assistantMessage.trim()) {
+                  setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: assistantMessage,
+                    timestamp: new Date().toISOString()
+                  }]);
+                } else {
+                  // 如果没有内容，显示错误
+                  setError('LLM 未返回任何内容，请重试');
+                }
                 setStreamingContent('');
                 setIsLoading(false);
                 return;

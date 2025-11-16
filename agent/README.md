@@ -8,13 +8,41 @@
 - 💬 流式和非流式响应
 - 🔄 实时对话体验
 - ⚙️ 环境变量配置
+- 🛠️ MCP 工具集成（待办事项和笔记管理）
 
 ## 安装依赖
 
+### Windows
+
+使用提供的脚本（推荐）：
+```bash
+# 从项目根目录运行
+scripts\install-agent-deps.bat
+```
+
+或手动安装：
 ```bash
 cd agent
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+### Linux/Mac
+
+```bash
+cd agent
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+**依赖列表：**
+- flask
+- flask-cors
+- openai
+- python-dotenv
+- requests
 
 ## 配置
 
@@ -34,11 +62,36 @@ AGENT_PORT=5000
 
 ## 启动服务
 
+### Windows
+
+使用提供的脚本（推荐）：
 ```bash
+# 从项目根目录运行
+scripts\start-agent.bat
+```
+
+或手动启动：
+```bash
+cd agent
+venv\Scripts\activate
+python start.py
+# 或
 python app.py
 ```
 
-服务将在 `http://localhost:5000` 启动。
+### Linux/Mac
+
+```bash
+cd agent
+source venv/bin/activate
+python start.py
+# 或
+python app.py
+```
+
+服务将在 `http://localhost:5000` 启动（或 `.env` 中配置的端口）。
+
+**注意：** 如果使用 `start.py`，它会进行更详细的启动检查和错误提示。
 
 ## API 接口
 

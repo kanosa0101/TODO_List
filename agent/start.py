@@ -25,6 +25,7 @@ def check_dependencies():
         import flask_cors
         from openai import OpenAI
         from dotenv import load_dotenv
+        import requests
         return True
     except ImportError as e:
         print(f"❌ 缺少依赖: {e}")

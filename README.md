@@ -1,24 +1,43 @@
 # 全栈待办事项应用
 
-一个现代化、功能丰富的前后端分离全栈项目，使用 React + Vite 作为前端，Java Spring Boot 作为后端。
+一个现代化、功能丰富的全栈项目，采用前后端分离架构，集成 AI Agent 服务。使用 React + Vite 作为前端，Java Spring Boot 作为后端，Python Flask 作为 AI Agent 服务。
 
 ## 📁 项目结构
 
 ```
 .
-├── backend/                    # Java Spring Boot 后端
+├── backend/                    # Java Spring Boot 后端 (端口: 3001)
 │   ├── src/main/java/         # 源代码
+│   │   └── com/todo/
+│   │       ├── controller/    # REST 控制器
+│   │       ├── service/       # 业务逻辑层
+│   │       ├── repository/    # 数据访问层
+│   │       ├── model/         # 实体模型
+│   │       ├── security/      # 安全配置
+│   │       └── config/        # 配置类
 │   ├── src/main/resources/    # 配置文件
 │   │   ├── application.properties          # 实际配置文件
 │   │   └── application.properties.example  # 配置示例文件
 │   └── pom.xml                # Maven 依赖
-├── frontend/                  # React + Vite 前端
-│   ├── src/                   # 源代码
+├── frontend/                  # React + Vite 前端 (端口: 5173)
+│   ├── src/
+│   │   ├── components/        # React 组件
+│   │   ├── services/          # API 服务
+│   │   ├── styles/            # 样式文件
+│   │   └── utils/             # 工具函数
 │   └── package.json          # 依赖配置
+├── agent/                     # AI Agent 服务 (端口: 5000)
+│   ├── app.py                # Flask 主应用
+│   ├── llm_client.py         # LLM 客户端
+│   ├── mcp_tools.py          # MCP 工具集成
+│   ├── requirements.txt      # Python 依赖
+│   ├── .env.example          # 环境变量示例
+│   └── README.md             # Agent 服务文档
 ├── scripts/                   # 启动脚本
 │   ├── start-all.bat/sh      # 一键启动所有服务
 │   ├── start-backend.bat/sh  # 启动后端
-│   └── start-frontend.bat/sh # 启动前端
+│   ├── start-frontend.bat/sh # 启动前端
+│   └── start-agent.bat/sh    # 启动 Agent 服务
 └── README.md                  # 项目文档
 ```
 
@@ -30,6 +49,7 @@
 - Maven 3.6+
 - Node.js 16+ 和 npm
 - MySQL 8.0+
+- Python 3.8+ (可选，用于 Agent 服务)
 
 ### 配置环境
 
@@ -62,11 +82,16 @@ sudo ./scripts/start-all.sh
 ```
 
 脚本会自动：
-- ✅ 检查必要工具（Java、Maven、Node.js）
+- ✅ 检查必要工具（Java、Maven、Node.js、Python）
 - ✅ 启动 MySQL 服务
-- ✅ 安装前端依赖
-- ✅ 启动后端和前端服务器
+- ✅ 安装前端和 Agent 依赖
+- ✅ 启动后端、前端和 Agent 服务器
 - ✅ 自动打开浏览器
+
+**服务端口：**
+- 前端：http://localhost:5173
+- 后端：http://localhost:3001
+- Agent：http://localhost:5000
 
 ### 手动启动
 
@@ -132,6 +157,12 @@ npm run dev
 - React Router
 - Monaco Editor
 
+**AI Agent:**
+- Python 3.8+
+- Flask + Flask-CORS
+- OpenAI API
+- MCP Tools (待办事项和笔记工具集成)
+
 ## 📡 主要 API
 
 ### 认证（无需Token）
@@ -149,6 +180,76 @@ npm run dev
 - `POST /api/notes` - 创建
 - `PUT /api/notes/{id}` - 更新
 - `DELETE /api/notes/{id}` - 删除
+
+### AI Agent
+- `GET /health` - 健康检查
+- `POST /api/chat` - 聊天（非流式）
+- `POST /api/chat/stream` - 聊天（流式，SSE）
+
+## 🤖 AI Agent 服务
+
+### 功能特性
+
+- 🤖 OpenAI 兼容的 LLM 对话
+- 💬 支持流式和非流式响应
+- 🛠️ MCP 工具集成（可调用待办事项和笔记API）
+- 🔄 实时对话体验
+
+### 快速配置
+
+1. **安装依赖**
+   ```bash
+   # 使用脚本（推荐）
+   scripts\install-agent-deps.bat
+   
+   # 或手动安装
+   cd agent
+   python -m venv venv
+   venv\Scripts\activate  # Linux/Mac: source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **配置环境变量**
+   ```bash
+   cd agent
+   cp .env.example .env
+   # 编辑 .env 文件，填入您的 LLM API 配置
+   ```
+
+3. **启动服务**
+   ```bash
+   # 使用脚本
+   scripts\start-agent.bat
+   
+   # 或手动启动
+   cd agent
+   venv\Scripts\activate
+   python start.py
+   ```
+
+### Agent API 示例
+
+**非流式聊天：**
+```bash
+curl -X POST http://localhost:5000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [{"role": "user", "content": "你好"}],
+    "temperature": 0.7
+  }'
+```
+
+**流式聊天：**
+```bash
+curl -X POST http://localhost:5000/api/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [{"role": "user", "content": "你好"}],
+    "temperature": 0.7
+  }'
+```
+
+更多详情请查看 [agent/README.md](agent/README.md)
 
 ## 🔧 常见问题
 

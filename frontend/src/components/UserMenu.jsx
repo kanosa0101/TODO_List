@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
-import './UserMenu.css';
+import '../styles/components.css';
 
 function UserMenu() {
   const [user, setUser] = useState(null);
@@ -33,7 +33,8 @@ function UserMenu() {
   const handleLogout = () => {
     setShowMenu(false); // 关闭菜单
     authService.logout();
-    navigate('/login');
+    // 使用 window.location 强制刷新页面，确保认证状态完全清除
+    window.location.href = '/';
   };
 
   if (!user) {

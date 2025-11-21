@@ -116,7 +116,7 @@ function TodoApp() {
         setError('找不到要更新的任务');
         return;
       }
-      
+
       // 构建完整的更新对象，确保所有字段都正确传递
       const updateData = {
         text: updates.text !== undefined ? updates.text : existingTodo.text,
@@ -130,13 +130,13 @@ function TodoApp() {
         deadline: updates.deadline !== undefined ? updates.deadline : existingTodo.deadline,
         dueDate: updates.dueDate !== undefined ? updates.dueDate : existingTodo.dueDate,
       };
-      
+
       // 如果变成每日任务，确保清除截止时间
       if (updateData.isDaily) {
         updateData.deadline = null;
         updateData.dueDate = null;
       }
-      
+
       const updatedTodo = await todoService.updateTodo(id, updateData);
       setAllTodos(allTodos.map(t => t.id === id ? updatedTodo : t)); // 更新全部数据
       // applyFilter 会自动更新显示的数据
@@ -188,51 +188,57 @@ function TodoApp() {
       <div className="container">
         <UserMenu />
         <Navigation />
-        <div className="header">
-          <h1>
-            <span className="icon">✨</span>
-            <span>我的待办清单</span>
-          </h1>
-          <TodoStats todos={allTodos} />
-          <CurrentTime />
-          <Calendar todos={allTodos} />
-        </div>
-
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <button 
-            className="add-task-button" 
-            onClick={() => setIsFormOpen(true)}
-          >
-            <span>➕</span> 添加新任务
-          </button>
-        </div>
-        <TodoForm 
-          onSubmit={handleAdd} 
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-        />
-        <TodoFilter filter={filter} onFilterChange={setFilter} todos={allTodos} />
-
-        {error && <div className="error-message">{error}</div>}
-
-        {loading ? (
-          <div className="loading">
-            <div className="spinner"></div>
-            <span>加载中...</span>
+        <div className="card" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+          <div className="header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+            <h1 style={{ fontSize: '2.2rem', marginBottom: '1.5rem', textAlign: 'center', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span className="icon">⚡</span>
+              <span>Task Command Center</span>
+            </h1>
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                <CurrentTime />
+                <Calendar todos={allTodos} />
+              </div>
+              <TodoStats todos={allTodos} />
+            </div>
           </div>
-        ) : (
-          <TodoList
-            todos={todos}
-            onToggle={handleToggle}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onPriorityChange={handlePriorityChange}
+
+          <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+            <button
+              className="btn btn-primary"
+              onClick={() => setIsFormOpen(true)}
+              style={{ width: '100%', maxWidth: '300px' }}
+            >
+              <span>➕</span> Initialize New Task
+            </button>
+          </div>
+          <TodoForm
+            onSubmit={handleAdd}
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
           />
-        )}
+          <TodoFilter filter={filter} onFilterChange={setFilter} todos={allTodos} />
+
+          {error && <div className="error-message" style={{ color: '#ff4d4f', marginBottom: '1rem' }}>{error}</div>}
+
+          {loading ? (
+            <div className="loading" style={{ textAlign: 'center', padding: '2rem', color: 'var(--accent-primary)' }}>
+              <div className="spinner"></div>
+              <span>System Syncing...</span>
+            </div>
+          ) : (
+            <TodoList
+              todos={todos}
+              onToggle={handleToggle}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              onPriorityChange={handlePriorityChange}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 export default TodoApp;
-

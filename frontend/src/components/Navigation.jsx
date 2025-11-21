@@ -6,27 +6,29 @@ function Navigation() {
 
   return (
     <nav className="main-navigation">
-      <Link 
-        to="/" 
-        className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+      <Link
+        to="/app"
+        className={`nav-item ${location.pathname === '/app' || location.pathname === '/' ? 'active' : ''}`}
       >
-        📋 待办
+        <span className="nav-icon">📋</span>
+        <span className="nav-text">待办事项</span>
       </Link>
-      <Link 
-        to="/notes" 
-        className={`nav-link ${location.pathname === '/notes' ? 'active' : ''}`}
+      <Link
+        to="/notes"
+        className={`nav-item ${location.pathname === '/notes' ? 'active' : ''}`}
       >
-        📝 笔记
+        <span className="nav-icon">📝</span>
+        <span className="nav-text">我的笔记</span>
       </Link>
-      <Link 
-        to="/agent" 
-        className={`nav-link ${location.pathname === '/agent' ? 'active' : ''}`}
+      <Link
+        to="/agent"
+        className={`nav-item ${location.pathname === '/agent' ? 'active' : ''}`}
       >
-        🤖 AI助手
+        <span className="nav-icon">🤖</span>
+        <span className="nav-text">AI助手</span>
       </Link>
     </nav>
   );
 }
 
 export default Navigation;
-

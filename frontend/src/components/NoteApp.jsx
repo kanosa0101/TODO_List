@@ -202,12 +202,12 @@ function NoteApp() {
       setError(null);
       const text = await file.text();
       const fileName = file.name.replace(/\.md$/i, '');
-      
+
       const newNote = await noteService.createNote({
         title: fileName,
         content: text
       });
-      
+
       setCurrentNote(newNote);
       setTitle(newNote.title);
       setContent(newNote.content || '');
@@ -280,7 +280,7 @@ function NoteApp() {
             <span>加载中...</span>
           </div>
         ) : (
-          <div className="note-app-container" style={{ display: 'flex', visibility: 'visible' }}>
+          <div className="note-app-container">
             <div className="note-sidebar">
               <div className="note-actions">
                 <button className="note-action-btn" onClick={handleNewNote}>
@@ -329,14 +329,14 @@ function NoteApp() {
                     />
                     <div className="note-editor-actions">
                       <div className="view-mode-toggle">
-                        <button 
+                        <button
                           className={`view-mode-btn ${viewMode === 'edit' ? 'active' : ''}`}
                           onClick={() => setViewMode('edit')}
                           title="编辑模式"
                         >
                           ✏️ 编辑
                         </button>
-                        <button 
+                        <button
                           className={`view-mode-btn ${viewMode === 'preview' ? 'active' : ''}`}
                           onClick={() => setViewMode('preview')}
                           title="预览模式"
@@ -365,7 +365,7 @@ function NoteApp() {
                     {viewMode === 'edit' && (
                       <div className="note-editor-wrapper">
                         <Editor
-                          height="600px"
+                          height="100%"
                           defaultLanguage="markdown"
                           value={content}
                           onChange={handleContentChange}

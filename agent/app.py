@@ -174,26 +174,85 @@ def chat_stream():
                     try:
                         logger.info(f"[{request_id}] 正在调用 LLM (模型: {llm_client.model})...")
                         start_time = datetime.now()
-                        response = llm_client.client.chat.completions.create(
+                        
+                        # 使用 stream=True 进行流式调用
+                        response_stream = llm_client.client.chat.completions.create(
                             model=llm_client.model,
                             messages=current_messages,
                             temperature=temperature,
-                            tools=tools if user_token else None,  # 只有在有 token 时才提供工具
-                            tool_choice="auto" if user_token else None
+                            tools=tools if user_token else None,
+                            tool_choice="auto" if user_token else None,
+                            stream=True
                         )
+                        
+                        # 用于收集完整响应
+                        full_content = ""
+                        tool_calls_data = {}  # index -> {id, type, function: {name, arguments}}
+                        
+                        # 处理流式响应
+                        for chunk in response_stream:
+                            delta = chunk.choices[0].delta
+                            
+                            # 处理内容
+                            if delta.content:
+                                content_chunk = delta.content
+                                full_content += content_chunk
+                                # 实时流式返回内容给前端
+                                yield f"data: {json.dumps({'content': content_chunk})}\n\n"
+                            
+                            # 处理工具调用
+                            if delta.tool_calls:
+                                for tc in delta.tool_calls:
+                                    idx = tc.index
+                                    if idx not in tool_calls_data:
+                                        tool_calls_data[idx] = {
+                                            "id": "",
+                                            "type": "function",
+                                            "function": {"name": "", "arguments": ""}
+                                        }
+                                    
+                                    if tc.id:
+                                        tool_calls_data[idx]["id"] += tc.id
+                                    if tc.function and tc.function.name:
+                                        tool_calls_data[idx]["function"]["name"] += tc.function.name
+                                    if tc.function and tc.function.arguments:
+                                        tool_calls_data[idx]["function"]["arguments"] += tc.function.arguments
+                        
                         elapsed = (datetime.now() - start_time).total_seconds()
-                        logger.info(f"[{request_id}] LLM 调用完成，耗时: {elapsed:.2f}秒")
+                        logger.info(f"[{request_id}] LLM 流式调用完成，耗时: {elapsed:.2f}秒")
+                        
+                        # 构造完整的 tool_calls 列表
+                        tool_calls = []
+                        if tool_calls_data:
+                            for idx in sorted(tool_calls_data.keys()):
+                                tc_data = tool_calls_data[idx]
+                                tool_calls.append({
+                                    "id": tc_data["id"],
+                                    "type": tc_data["type"],
+                                    "function": {
+                                        "name": tc_data["function"]["name"],
+                                        "arguments": tc_data["function"]["arguments"]
+                                    }
+                                })
+                        
+                        # 构造完整的 message 对象 (模拟 OpenAI Message 对象结构)
+                        class MockMessage:
+                            def __init__(self, content, tool_calls):
+                                self.content = content
+                                self.tool_calls = tool_calls
+                        
+                        message = MockMessage(full_content, tool_calls if tool_calls else None)
+                        
+                        logger.info(f"[{request_id}] LLM 完整响应:")
+                        logger.info(f"[{request_id}]   - 有工具调用: {bool(message.tool_calls)}")
+                        logger.info(f"[{request_id}]   - 有内容: {bool(message.content)}")
+                        if message.content:
+                            logger.info(f"[{request_id}]   - 内容预览: {message.content[:200]}")
+
                     except Exception as e:
                         logger.error(f"[{request_id}] LLM调用失败: {str(e)}")
                         yield f"data: {json.dumps({'error': f'LLM调用失败: {str(e)}'})}\n\n"
                         break
-                    
-                    message = response.choices[0].message
-                    logger.info(f"[{request_id}] LLM 响应:")
-                    logger.info(f"[{request_id}]   - 有工具调用: {bool(message.tool_calls)}")
-                    logger.info(f"[{request_id}]   - 有内容: {bool(message.content)}")
-                    if message.content:
-                        logger.info(f"[{request_id}]   - 内容预览: {message.content[:200]}")
                     
                     # 检查是否有工具调用
                     if message.tool_calls and user_token:
@@ -202,25 +261,16 @@ def chat_stream():
                         assistant_message = {
                             "role": "assistant",
                             "content": message.content or None,
-                            "tool_calls": [
-                                {
-                                    "id": tc.id,
-                                    "type": tc.type,
-                                    "function": {
-                                        "name": tc.function.name,
-                                        "arguments": tc.function.arguments
-                                    }
-                                }
-                                for tc in message.tool_calls
-                            ]
+                            "tool_calls": message.tool_calls
                         }
                         current_messages.append(assistant_message)
                         
                         # 执行所有工具调用
                         for idx, tool_call in enumerate(message.tool_calls, 1):
-                            tool_name = tool_call.function.name
+                            # 注意：这里 tool_call 是字典，不是对象，因为我们手动构造的
+                            tool_name = tool_call['function']['name']
                             try:
-                                arguments = json.loads(tool_call.function.arguments)
+                                arguments = json.loads(tool_call['function']['arguments'])
                             except:
                                 arguments = {}
                             
@@ -240,75 +290,29 @@ def chat_stream():
                             # 添加工具调用结果到消息历史
                             current_messages.append({
                                 "role": "tool",
-                                "tool_call_id": tool_call.id,
+                                "tool_call_id": tool_call['id'],
                                 "name": tool_name,
                                 "content": json.dumps(tool_result, ensure_ascii=False)
                             })
                         
                         # 继续循环，让 LLM 基于工具结果生成回复
-                        # 注意：工具调用后，下一次 LLM 调用应该返回最终回复
                         continue
                     
-                    # 没有工具调用，流式返回最终响应
-                    # 如果 message.content 有内容，直接返回
-                    if message.content and message.content.strip():
-                        logger.info(f"[{request_id}] 返回最终响应，内容长度: {len(message.content)} 字符")
+                    # 没有工具调用，且已经流式返回了内容
+                    if message.content:
+                        logger.info(f"[{request_id}] 最终响应已流式发送完毕")
                         current_messages.append({
                             "role": "assistant",
                             "content": message.content
                         })
-                        # 流式返回内容（按块发送以保持流式体验）
-                        chunk_size = 10  # 每次发送10个字符
-                        total_chunks = (len(message.content) + chunk_size - 1) // chunk_size
-                        logger.info(f"[{request_id}] 开始流式发送响应，共 {total_chunks} 个块")
-                        for i in range(0, len(message.content), chunk_size):
-                            chunk = message.content[i:i+chunk_size]
-                            yield f"data: {json.dumps({'content': chunk})}\n\n"
                         yield f"data: {json.dumps({'done': True})}\n\n"
                         logger.info(f"[{request_id}] ========== 请求完成 ==========")
                         break
                     else:
-                        # 如果没有内容，可能是工具调用后的情况，需要再次调用 LLM 生成最终回复
-                        # 添加空的 assistant 消息（如果还没有的话）
-                        last_assistant = None
-                        for msg in reversed(current_messages[-5:]):
-                            if msg.get("role") == "assistant" and not msg.get("tool_calls"):
-                                last_assistant = msg
-                                break
-                        
-                        if not last_assistant:
-                            current_messages.append({
-                                "role": "assistant",
-                                "content": ""
-                            })
-                        
-                        # 流式生成最终回复（不传入 tools，确保生成文本回复）
-                        logger.info(f"[{request_id}] 使用流式调用生成最终回复...")
-                        has_content = False
-                        chunk_count = 0
-                        try:
-                            stream_start_time = datetime.now()
-                            for chunk in llm_client.think_stream(current_messages, temperature):
-                                if chunk is None:
-                                    logger.error(f"[{request_id}] 流式生成返回 None")
-                                    yield f"data: {json.dumps({'error': 'LLM调用失败'})}\n\n"
-                                    break
-                                has_content = True
-                                chunk_count += 1
-                                yield f"data: {json.dumps({'content': chunk})}\n\n"
-                            stream_elapsed = (datetime.now() - stream_start_time).total_seconds()
-                            logger.info(f"[{request_id}] 流式生成完成，共 {chunk_count} 个块，耗时: {stream_elapsed:.2f}秒")
-                        except Exception as e:
-                            logger.error(f"[{request_id}] 流式生成失败: {str(e)}")
-                            yield f"data: {json.dumps({'error': f'流式生成失败: {str(e)}'})}\n\n"
-                        
-                        if has_content:
-                            yield f"data: {json.dumps({'done': True})}\n\n"
-                            logger.info(f"[{request_id}] ========== 请求完成 ==========")
-                        else:
-                            # 如果仍然没有内容，发送错误信息
-                            logger.warning(f"[{request_id}] LLM未返回任何内容")
-                            yield f"data: {json.dumps({'error': 'LLM未返回任何内容'})}\n\n"
+                        # 如果没有内容且没有工具调用（异常情况），或者需要生成最终回复（理论上 stream=True 应该已经处理了内容）
+                        # 但如果 stream=True 返回了空内容且无工具调用，可能是出错了
+                        logger.warning(f"[{request_id}] LLM未返回任何内容且无工具调用")
+                        yield f"data: {json.dumps({'error': 'LLM未返回有效内容'})}\n\n"
                         break
                 
             except Exception as e:

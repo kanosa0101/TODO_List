@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../services/authService';
-import './LoginForm.css';
 
 function RegisterForm() {
   const [username, setUsername] = useState('');
@@ -23,7 +22,7 @@ function RegisterForm() {
         userId: response.userId,
       });
       // 使用 window.location 强制刷新页面，确保认证状态更新
-      window.location.href = '/';
+      window.location.href = '/app';
     } catch (err) {
       setError(err.message || '注册失败，请检查输入信息');
     } finally {
@@ -32,66 +31,70 @@ function RegisterForm() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>创建账号</h2>
+    <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Create Account</h2>
         <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="form-group">
-            <label htmlFor="username">用户名</label>
+          {error && <div className="error-message" style={{ color: '#ff4d4f', marginBottom: '1rem' }}>{error}</div>}
+
+          <div className="input-group">
+            <label className="input-label" htmlFor="username">Username</label>
             <input
+              className="input-field"
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="请输入用户名（3-50个字符）"
+              placeholder="3-50 characters"
               required
               minLength={3}
               maxLength={50}
               autoFocus
               disabled={loading}
             />
-            <small>用户名长度3-50个字符</small>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">邮箱</label>
+          <div className="input-group">
+            <label className="input-label" htmlFor="email">Email</label>
             <input
+              className="input-field"
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="请输入邮箱地址"
+              placeholder="Enter your email"
               required
               disabled={loading}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">密码</label>
+          <div className="input-group">
+            <label className="input-label" htmlFor="password">Password</label>
             <input
+              className="input-field"
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码（至少6个字符）"
+              placeholder="Min 6 characters"
               required
               minLength={6}
               maxLength={100}
               disabled={loading}
             />
-            <small>密码长度至少6个字符</small>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? '注册中...' : '注册'}
+          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+            {loading ? 'Creating Account...' : 'Register'}
           </button>
         </form>
 
-        <div className="auth-footer">
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <p>
-            已有账号？ <Link to="/login">立即登录</Link>
+            Already have an account? <Link to="/login" style={{ color: 'var(--accent-primary)' }}>Login</Link>
+          </p>
+          <p style={{ marginTop: '0.5rem' }}>
+            <Link to="/" style={{ color: 'var(--accent-primary)' }}>← Back to Home</Link>
           </p>
         </div>
       </div>

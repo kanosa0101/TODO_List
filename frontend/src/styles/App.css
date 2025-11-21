@@ -1,6 +1,6 @@
 .app {
   width: 100%;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -9,16 +9,7 @@
   max-width: 1600px;
 }
 
-.container {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-}
-
+/* Header specific styles that don't conflict with components.css */
 .header {
   margin-bottom: 32px;
   display: flex;
@@ -27,37 +18,18 @@
   gap: 20px;
 }
 
-h1 {
-  color: #2d3436;
-  margin: 0;
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-h1 > span:not(.icon) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .icon {
   font-size: 2.5rem;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-  -webkit-text-fill-color: initial;
-  color: initial;
+  filter: drop-shadow(0 0 10px var(--accent-glow));
   display: inline-block;
+  margin-right: 10px;
 }
 
 .error-message {
   padding: 12px 16px;
-  background: #ff4757;
-  color: white;
+  background: rgba(255, 71, 87, 0.1);
+  color: #ff4757;
+  border: 1px solid #ff4757;
   border-radius: 8px;
   margin-bottom: 16px;
   text-align: center;
@@ -66,18 +38,8 @@ h1 > span:not(.icon) {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .container {
-    padding: 24px;
-    border-radius: 16px;
-  }
-
-  h1 {
-    font-size: 2rem;
-  }
-
   .user-menu {
     top: 12px;
     right: 12px;
   }
 }
-

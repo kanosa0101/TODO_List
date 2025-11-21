@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import TodoApp from './components/TodoApp';
 import NoteApp from './components/NoteApp';
 import AgentApp from './components/AgentApp';
+import LandingPage from './components/LandingPage';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -19,40 +20,46 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 登录页面 - 未认证时显示，已认证时重定向到主页 */}
+        {/* Landing Page - Public */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Login Page - Redirect to /app if authenticated */}
         <Route path="/login" element={
-          isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />
+          isAuthenticated ? <Navigate to="/app" replace /> : <LoginForm />
         } />
-        {/* 注册页面 - 未认证时显示，已认证时重定向到主页 */}
+
+        {/* Register Page - Redirect to /app if authenticated */}
         <Route path="/register" element={
-          isAuthenticated ? <Navigate to="/" replace /> : <RegisterForm />
+          isAuthenticated ? <Navigate to="/app" replace /> : <RegisterForm />
         } />
-        {/* 主页 - 已认证时显示，未认证时显示登录页面 */}
-        <Route path="/" element={
+
+        {/* Main App - Protected */}
+        <Route path="/app" element={
           isAuthenticated ? (
             <ProtectedRoute>
               <TodoApp />
             </ProtectedRoute>
           ) : (
-            <LoginForm />
+            <Navigate to="/login" replace />
           )
         } />
-        {/* 笔记页面 - 需要认证 */}
+
+        {/* Notes Page - Protected */}
         <Route path="/notes" element={
           <ProtectedRoute>
             <NoteApp />
           </ProtectedRoute>
         } />
-        {/* AI助手页面 - 需要认证 */}
+
+        {/* AI Agent Page - Protected */}
         <Route path="/agent" element={
           <ProtectedRoute>
             <AgentApp />
           </ProtectedRoute>
         } />
-        {/* 其他路径 - 未认证时显示登录页面，已认证时重定向到主页 */}
-        <Route path="*" element={
-          isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />
-        } />
+
+        {/* Catch all - Redirect to Landing Page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

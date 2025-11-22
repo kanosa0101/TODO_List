@@ -51,6 +51,9 @@ public class Todo {
     @Column(nullable = true)
     private LocalDateTime lastResetDate; // 上次重置日期（用于每日任务）
     
+    @Column(nullable = true)
+    private LocalDateTime completedAt; // 完成时间（用于自动删除旧任务）
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
@@ -117,6 +120,11 @@ public class Todo {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+        if (completed) {
+            this.completedAt = LocalDateTime.now();
+        } else {
+            this.completedAt = null;
+        }
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -222,6 +230,15 @@ public class Todo {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
         this.updatedAt = LocalDateTime.now();
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,4 +34,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     
     // 检查指定用户的待办事项是否存在
     boolean existsByIdAndUser(Long id, User user);
+    
+    // 查询所有完成时间早于指定日期的已完成任务
+    @Query("SELECT t FROM Todo t WHERE t.completed = true AND t.completedAt IS NOT NULL AND t.completedAt < :cutoffDate")
+    List<Todo> findCompletedBefore(LocalDateTime cutoffDate);
 }

@@ -10,7 +10,7 @@ const LandingPage = () => {
       <div className="landing-container">
         <nav className="landing-nav">
           <div className="nav-logo">
-            <span>💕</span> Daily Planner
+            <span>🌸</span> Daily Planner
           </div>
           <div className="nav-links">
             <span className="nav-link">Features</span>
@@ -37,8 +37,8 @@ const LandingPage = () => {
             </div>
             <div className="feature-card">
               <span className="feature-icon">📅</span>
-              <h3>Calendar View</h3>
-              <p>Visualize your schedule at a glance.</p>
+              <h3>AI Powered</h3>
+              <p>Smart task management with AI assistance.</p>
             </div>
             <div className="feature-card">
               <span className="feature-icon">📝</span>

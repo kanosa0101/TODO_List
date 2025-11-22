@@ -34,6 +34,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 设置请求/响应日志中间件
+try:
+    from middleware import setup_request_logging
+    setup_request_logging(app)
+    logger.info("✓ 请求日志中间件已启用")
+except Exception as e:
+    logger.warning(f"⚠ 请求日志中间件启用失败: {e}")
+
 # 初始化 LLM 客户端
 llm_client = None
 try:
@@ -85,7 +93,12 @@ def health():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """聊天接口 - 非流式响应"""
+    request_id = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+    logger.info(f"[{request_id}] ========== 收到非流式聊天请求 ==========")
+    logger.info(f"[{request_id}] 请求来源: {request.remote_addr}")
+    
     if not llm_client:
+        logger.error(f"[{request_id}] LLM客户端未初始化")
         return jsonify({'error': 'LLM客户端未初始化'}), 500
     
     try:
@@ -93,19 +106,44 @@ def chat():
         messages = data.get('messages', [])
         temperature = data.get('temperature', 0)
         
+        logger.info(f"[{request_id}] 请求参数:")
+        logger.info(f"[{request_id}]   - 消息数量: {len(messages)}")
+        logger.info(f"[{request_id}]   - 温度: {temperature}")
+        if messages:
+            logger.info(f"[{request_id}]   - 消息内容:")
+            for i, msg in enumerate(messages):
+                role = msg.get('role', 'unknown')
+                content = msg.get('content', '')
+                logger.info(f"[{request_id}]     [{i+1}] {role}: {content[:100]}{'...' if len(content) > 100 else ''}")
+        
         if not messages:
+            logger.warning(f"[{request_id}] 消息为空")
             return jsonify({'error': '消息不能为空'}), 400
+        
+        logger.info(f"[{request_id}] 正在调用 LLM (模型: {llm_client.model})...")
+        start_time = datetime.now()
         
         response_text = llm_client.think(messages, temperature)
         
+        elapsed = (datetime.now() - start_time).total_seconds()
+        
         if response_text is None:
+            logger.error(f"[{request_id}] LLM调用失败，耗时: {elapsed:.2f}秒")
             return jsonify({'error': 'LLM调用失败'}), 500
+        
+        logger.info(f"[{request_id}] LLM调用成功，耗时: {elapsed:.2f}秒")
+        logger.info(f"[{request_id}] 响应长度: {len(response_text)} 字符")
+        logger.info(f"[{request_id}] 响应预览: {response_text[:200]}{'...' if len(response_text) > 200 else ''}")
+        logger.info(f"[{request_id}] ========== 请求完成 ==========")
         
         return jsonify({
             'response': response_text,
             'model': llm_client.model
         })
     except Exception as e:
+        logger.error(f"[{request_id}] 处理请求时发生异常: {str(e)}")
+        import traceback
+        logger.error(f"[{request_id}] 异常堆栈:\n{traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat/stream', methods=['POST'])
@@ -129,9 +167,13 @@ def chat_stream():
         logger.info(f"[{request_id}]   - 消息数量: {len(messages)}")
         logger.info(f"[{request_id}]   - 温度: {temperature}")
         logger.info(f"[{request_id}]   - 用户Token: {'已提供' if user_token else '未提供'}")
+        
         if messages:
-            last_message = messages[-1]
-            logger.info(f"[{request_id}]   - 最后一条消息: {last_message.get('role', 'unknown')} - {last_message.get('content', '')[:100]}")
+            logger.info(f"[{request_id}]   - 完整消息历史:")
+            for i, msg in enumerate(messages):
+                role = msg.get('role', 'unknown')
+                content = msg.get('content', '')
+                logger.info(f"[{request_id}]     [{i+1}] {role}: {content[:150]}{'...' if len(content) > 150 else ''}")
         
         if not messages:
             logger.warning(f"[{request_id}] 消息为空，返回错误")
@@ -271,11 +313,13 @@ def chat_stream():
                             tool_name = tool_call['function']['name']
                             try:
                                 arguments = json.loads(tool_call['function']['arguments'])
-                            except:
+                                logger.info(f"[{request_id}] 工具调用 {idx}/{len(message.tool_calls)}: {tool_name}")
+                                logger.info(f"[{request_id}]   参数: {json.dumps(arguments, ensure_ascii=False, indent=2)}")
+                            except json.JSONDecodeError as e:
                                 arguments = {}
-                            
-                            logger.info(f"[{request_id}] 工具调用 {idx}/{len(message.tool_calls)}: {tool_name}")
-                            logger.info(f"[{request_id}]   参数: {json.dumps(arguments, ensure_ascii=False, indent=2)}")
+                                logger.error(f"[{request_id}] 工具调用参数解析失败 {idx}/{len(message.tool_calls)}: {tool_name}")
+                                logger.error(f"[{request_id}]   错误: {str(e)}")
+                                logger.error(f"[{request_id}]   原始参数: {tool_call['function']['arguments']}")
                             
                             # 执行工具
                             tool_start_time = datetime.now()
@@ -283,9 +327,14 @@ def chat_stream():
                             tool_elapsed = (datetime.now() - tool_start_time).total_seconds()
                             
                             logger.info(f"[{request_id}] 工具执行完成，耗时: {tool_elapsed:.2f}秒")
-                            logger.info(f"[{request_id}]   结果: success={tool_result.get('success', False)}")
-                            if not tool_result.get('success', False):
-                                logger.warning(f"[{request_id}]   错误: {tool_result.get('error', '未知错误')}")
+                            logger.info(f"[{request_id}]   成功: {tool_result.get('success', False)}")
+                            if tool_result.get('success', False):
+                                # 记录成功的工具结果（截断长内容）
+                                result_str = json.dumps(tool_result, ensure_ascii=False)
+                                logger.info(f"[{request_id}]   结果: {result_str[:300]}{'...' if len(result_str) > 300 else ''}")
+                            else:
+                                logger.error(f"[{request_id}]   失败原因: {tool_result.get('error', '未知错误')}")
+                                logger.error(f"[{request_id}]   完整结果: {json.dumps(tool_result, ensure_ascii=False)}")
                             
                             # 添加工具调用结果到消息历史
                             current_messages.append({

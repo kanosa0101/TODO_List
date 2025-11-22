@@ -20,17 +20,85 @@ def check_env_file():
 
 def check_dependencies():
     """检查必要的依赖"""
+    missing_deps = []
     try:
         import flask
+    except ImportError:
+        missing_deps.append("flask")
+    
+    try:
         import flask_cors
+    except ImportError:
+        missing_deps.append("flask-cors")
+    
+    try:
         from openai import OpenAI
+    except ImportError:
+        missing_deps.append("openai")
+    
+    try:
         from dotenv import load_dotenv
+    except ImportError:
+        missing_deps.append("python-dotenv")
+    
+    try:
         import requests
-        return True
-    except ImportError as e:
-        print(f"❌ 缺少依赖: {e}")
+    except ImportError:
+        missing_deps.append("requests")
+    
+    if missing_deps:
+        print(f"❌ 缺少以下依赖: {', '.join(missing_deps)}")
         print("   请运行: pip install -r requirements.txt")
         return False
+    return True
+
+def validate_env_config():
+    """验证 .env 配置"""
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    load_dotenv(env_path)
+    
+    # 获取配置值并去除引号
+    def get_clean_value(key):
+        value = os.getenv(key, '').strip()
+        if value:
+            value = value.strip('"').strip("'")
+        return value
+    
+    model_id = get_clean_value('LLM_MODEL_ID')
+    api_key = get_clean_value('LLM_API_KEY')
+    base_url = get_clean_value('LLM_BASE_URL')
+    
+    missing = []
+    if not model_id:
+        missing.append('LLM_MODEL_ID')
+    if not api_key:
+        missing.append('LLM_API_KEY')
+    if not base_url:
+        missing.append('LLM_BASE_URL')
+    
+    if missing:
+        print(f"   ⚠️  缺少必需配置: {', '.join(missing)}")
+        print()
+        print("   请编辑 .env 文件，填入以下配置：")
+        for key in missing:
+            if key == 'LLM_MODEL_ID':
+                print(f"     {key}=your-model-id  (例如: gpt-4, claude-3-sonnet-20240229)")
+            elif key == 'LLM_API_KEY':
+                print(f"     {key}=your-api-key")
+            elif key == 'LLM_BASE_URL':
+                print(f"     {key}=https://api.openai.com/v1")
+        print()
+        print("   提示：配置值不需要加引号")
+        return False
+    
+    # 显示当前配置（隐藏敏感信息）
+    print(f"   ✓ 配置已加载")
+    print(f"     - 模型: {model_id}")
+    print(f"     - API地址: {base_url}")
+    api_key_display = api_key[:10] + "..." if len(api_key) > 10 else "***"
+    print(f"     - API密钥: {api_key_display}")
+    return True
 
 def main():
     print("=" * 60)
@@ -44,16 +112,20 @@ def main():
     print()
     
     # 检查 .env 文件
-    print("[1/3] 检查配置文件...")
+    print("[1/4] 检查配置文件...")
     if not check_env_file():
         print("   请先配置 .env 文件")
         input("\n按 Enter 键退出...")
         return
-    print("   ✓ .env 文件存在")
+    
+    # 验证配置内容
+    if not validate_env_config():
+        input("\n按 Enter 键退出...")
+        return
     print()
     
     # 检查依赖
-    print("[2/3] 检查 Python 依赖...")
+    print("[2/4] 检查 Python 依赖...")
     if not check_dependencies():
         input("\n按 Enter 键退出...")
         return
@@ -61,7 +133,7 @@ def main():
     print()
     
     # 启动服务
-    print("[3/3] 启动 Agent 服务...")
+    print("[3/4] 准备启动服务...")
     print()
     print("=" * 60)
     
@@ -76,7 +148,7 @@ def main():
         load_dotenv(env_file)
         
         # 导入并运行 app
-        print("   正在导入 app 模块...")
+        print("[4/4] 正在启动 Agent 服务...")
         from app import app, llm_client
         port = int(os.getenv('AGENT_PORT', 5000))
         
@@ -84,10 +156,12 @@ def main():
         print(f"🚀 Agent 服务启动中...")
         print(f"   地址: http://0.0.0.0:{port}")
         print(f"   本地: http://localhost:{port}")
-        print(f"   LLM 就绪: {'是' if llm_client else '否'}")
+        print(f"   LLM 就绪: {'✓ 是' if llm_client else '✗ 否'}")
         if not llm_client:
+            print()
             print("   ⚠️  警告: LLM 客户端未初始化")
-            print("   请检查 .env 文件中的配置")
+            print("   服务可以启动，但 AI 功能将不可用")
+            print("   请检查上方的错误信息")
         print("=" * 60)
         print()
         print("服务运行中，按 Ctrl+C 停止...")

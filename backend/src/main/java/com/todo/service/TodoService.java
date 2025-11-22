@@ -7,6 +7,7 @@ import com.todo.repository.TodoRepository;
 import com.todo.repository.UserRepository;
 import com.todo.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -179,5 +180,20 @@ public class TodoService {
             throw new TodoNotFoundException(id);
         }
         todoRepository.deleteById(id);
+    }
+    
+    /**
+     * 自动清理超过7天的已完成任务
+     * 每天凌晨2点执行
+     */
+    @Scheduled(cron = "0 0 2 * * ?")
+    public void cleanupOldCompletedTodos() {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+        List<Todo> oldCompletedTodos = todoRepository.findCompletedBefore(cutoffDate);
+        
+        if (!oldCompletedTodos.isEmpty()) {
+            todoRepository.deleteAll(oldCompletedTodos);
+            System.out.println("清理了 " + oldCompletedTodos.size() + " 个超过7天的已完成任务");
+        }
     }
 }

@@ -29,7 +29,7 @@ function Calendar({ todos = [] }) {
     const daysInMonth = lastDay.getDate();
     // 转换为周一到周日 (0=周一, 6=周日)
     const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // 0=周日 -> 6, 1=周一 -> 0, etc.
-    
+
     return { year, month, daysInMonth, startingDayOfWeek };
   };
 
@@ -38,7 +38,7 @@ function Calendar({ todos = [] }) {
     const prevMonth = new Date(year, month, 0);
     const daysInPrevMonth = prevMonth.getDate();
     const days = [];
-    
+
     // startingDayOfWeek 已经是周一到周日的格式 (0=周一, 6=周日)
     // 需要显示上个月的几天来填充第一周
     if (startingDayOfWeek > 0) {
@@ -101,8 +101,8 @@ function Calendar({ todos = [] }) {
   const isToday = (date) => {
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   };
 
   // 检查是否是周末（周六或周日）
@@ -141,9 +141,9 @@ function Calendar({ todos = [] }) {
 
   return (
     <div className="calendar-container">
-      <div className="calendar-header">
+      <div className="calendar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <button className="calendar-nav-btn" onClick={goToPreviousMonth}>‹</button>
-        <h3 className="calendar-month-title">{formatMonthTitle()}</h3>
+        <h3 className="calendar-month-title" style={{ margin: 0 }}>{formatMonthTitle()}</h3>
         <button className="calendar-nav-btn" onClick={goToNextMonth}>›</button>
       </div>
       <div className="calendar-weekdays">
@@ -161,7 +161,7 @@ function Calendar({ todos = [] }) {
           const today = isToday(date);
           const weekend = isWeekend(date);
           const hasTaskOnDate = hasTask(date);
-          const isSelected = selectedDate && 
+          const isSelected = selectedDate &&
             date.getDate() === selectedDate.getDate() &&
             date.getMonth() === selectedDate.getMonth() &&
             date.getFullYear() === selectedDate.getFullYear();

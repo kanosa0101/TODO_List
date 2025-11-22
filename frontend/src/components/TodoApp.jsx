@@ -194,12 +194,9 @@ function TodoApp() {
               <span className="icon">⚡</span>
               <span>Task Command Center</span>
             </h1>
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-                <CurrentTime />
-                <Calendar todos={allTodos} />
-              </div>
-              <TodoStats todos={allTodos} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
+              <CurrentTime />
+              <Calendar todos={allTodos} />
             </div>
           </div>
 

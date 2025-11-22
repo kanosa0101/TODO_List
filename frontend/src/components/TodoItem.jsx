@@ -79,7 +79,7 @@ function TodoItem({ todo, onToggle, onUpdate, onDelete, onPriorityChange }) {
       <div className={`todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority?.toLowerCase()}`}
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--border-color)',
+          border: '4px solid var(--border-color)',
           borderRadius: '8px',
           marginBottom: '1rem',
           padding: '1rem',

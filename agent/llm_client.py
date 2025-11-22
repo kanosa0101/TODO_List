@@ -48,8 +48,17 @@ class HelloAgentsLLM:
         """
         调用大语言模型进行思考，并返回其响应。
         """
-        print(f"🧠 正在调用 {self.model} 模型...")
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"🧠 调用 {self.model} 模型...")
+        logger.info(f"   参数: temperature={temperature}")
+        logger.info(f"   消息数: {len(messages)}")
+        
         try:
+            start_time = __import__('datetime').datetime.now()
+            logger.info(f"   发起 API 请求...")
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -57,17 +66,36 @@ class HelloAgentsLLM:
                 stream=True,
             )
             
-            # 处理流式响应
-            print("✅ 大语言模型响应成功:")
+            logger.info("   ✅ API 连接成功，开始接收流式响应...")
             collected_content = []
+            chunk_count = 0
+            
             for chunk in response:
                 content = chunk.choices[0].delta.content or ""
-                print(content, end="", flush=True)
-                collected_content.append(content)
+                if content:
+                    chunk_count += 1
+                    print(content, end="", flush=True)
+                    collected_content.append(content)
+            
+            elapsed = (__import__('datetime').datetime.now() - start_time).total_seconds()
+            full_response = "".join(collected_content)
+            
             print()  # 在流式输出结束后换行
-            return "".join(collected_content)
+            logger.info(f"   ✅ 响应接收完成")
+            logger.info(f"   接收块数: {chunk_count}")
+            logger.info(f"   响应长度: {len(full_response)} 字符")
+            logger.info(f"   耗时: {elapsed:.2f} 秒")
+            logger.info(f"   速度: {len(full_response)/elapsed:.1f} 字符/秒")
+            
+            return full_response
         except Exception as e:
-            print(f"❌ 调用LLM API时发生错误: {e}")
+            elapsed = (__import__('datetime').datetime.now() - start_time).total_seconds() if 'start_time' in locals() else 0
+            logger.error(f"   ❌ 调用LLM API失败: {e}")
+            logger.error(f"   失败时间: {elapsed:.2f} 秒后")
+            logger.error(f"   模型: {self.model}")
+            logger.error(f"   错误类型: {type(e).__name__}")
+            import traceback
+            logger.error(f"   详细堆栈:\n{traceback.format_exc()}")
             return None
 
     def think_stream(self, messages: List[Dict[str, str]], temperature: float = 0):
